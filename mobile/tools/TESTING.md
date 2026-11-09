@@ -138,6 +138,50 @@ The camera (or the fake) sends UDP to the host's LAN address, but the emulator o
 3. The app's socket is bound to the Wi-Fi network and receives the redirected packets. Measured ~11 fps displayed in the emulator (software rendering).
 A live view that stalls after startup: close and reopen Remote (re-sending `startstream`, with or without `stopstream`, did not revive it once).
 
+## README screenshots and demo reel
+How `docs/media/` was made (2026-11-09, `lumix_s23plus`, real camera on home Wi-Fi). Takes ~20 min; the camera must stay on its
+Wi-Fi waiting screen the whole time (turn off its sleep mode). Raw captures go to `mobile/tools/out/raw/` (scratch).
+`A` below is `adb -s 192.168.65.254:5555 shell`. In zsh, wrap commands in functions or a `bash` script: `A="adb ... shell"; $A ...` fails because zsh doesn't split words.
+
+1. **Setup.** Emulator running, `phone.sh emulator`, `install`, `launch`; live view redirect and `udprelay.py` on the host (section above).
+   ffmpeg isn't in the image: `pip install --user imageio-ffmpeg`, then `ln -s $(python3 -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())") ~/.local/bin/ffmpeg`.
+   Wait ~1 min after launch for dates and thumbnails. Thumbnails that failed stay blank; retry them with
+   `$P eval 'document.querySelectorAll(".tile img").forEach(i=>{if(!i.dataset.loaded){delete i.dataset.tries;delete i.dataset.miss;delete i.dataset.queued;observer.unobserve(i);observer.observe(i)}})'`.
+2. **Clean status bar** (Android demo mode, clock 10:00, no icons):
+   `A settings put global sysui_demo_allowed 1`, then `A am broadcast -a com.android.systemui.demo -e command <cmd>` with `enter`,
+   `clock -e hhmm 1000`, `notifications -e visible false`, `battery -e level 100 -e plugged false`, `network -e wifi show -e level 4 -e mobile hide`.
+   Afterwards `-e command exit`.
+3. **Theme.** `A cmd uimode night yes|no`, then `$P eval 'refreshNight()'` (theme "System" follows it; the shade and status bar too). Shoot everything once per mode.
+4. **Screens** (drive with `$P eval`, wait, `$P shot <file>`):
+   - Gallery: `scrollTo(0,0)`.
+   - Viewer: `openLb(1)` (wait ~6 s for the image).
+   - Details: `showInfo(true)`; wait ~10 s or it shows "Reading details…" (EXIF is fetched from the camera; cached afterwards).
+   - Selection: `showInfo(false); closeLb(); setSelecting(true); visible().slice(0,4).forEach(i=>sel.add(i.id)); refreshTiles(); updateSel()`, then `setSelecting(false)`.
+   - Remote: `openRemote()`, wait ~12 s; `remote.frames` should be climbing. `closeRemote()` afterwards. Remote is always dark; only the status bar changes.
+5. **Save notification.** Uses the 2 newest photos only, deleted again afterwards.
+   - `A pm grant com.cameron.lumix android.permission.POST_NOTIFICATIONS` (no prompt in the shot).
+   - Hide other apps' notifications for an hour: list keys with `A dumpsys notification --noredact | grep -oE "key=0\|[^ ]+\|[0-9]+$"`, then
+     `A "cmd notification snooze --for 3600000 '<key>'"` for each non-Lumix key.
+   - Before each save, clear Lumix's previous "Saved" notification (otherwise the two group and the progress bar is collapsed): expand the shade,
+     `A uiautomator dump /sdcard/u.xml`, tap the centre of the `text="Clear all"` bounds, collapse.
+   - If the files are already saved, delete them first (below) and `$P eval 'refreshSaved()'`.
+   - `$P eval 'saveItems(visible().slice(0,2))'`, wait 3 s, `A cmd statusbar expand-notifications`, wait 2 s, shoot (catches "Saving 1 of 2" with
+     its bar), wait ~18 s for the save to finish, `A cmd statusbar collapse`.
+6. **Demo reel** (light mode, ~35 s). Warm the EXIF cache for the photo the reel opens Details on (`openLb(2); showInfo(true)`, wait 12 s, close).
+   Start `adb -s 192.168.65.254:5555 shell screenrecord --time-limit 38 --bit-rate 8000000 /sdcard/demo.mp4 &`, then with `A input` (screen px):
+   swipe up twice through the gallery, swipe down 3x fast (pull-to-refresh), tap a tile (540 1065), swipe left to the next photo,
+   tap Details (888 148), back twice, long-press a tile (`swipe 203 1065 203 1065 900`) and tap 3 more, back, tap the camera icon (657 138),
+   wait 7 s for live view, back. `wait` for screenrecord, then `adb pull /sdcard/demo.mp4`.
+7. **Encode into `docs/media/`:**
+   - Screenshots: `ffmpeg -i <raw>.png -vf scale=540:-1:flags=lanczos -q:v 3 docs/media/<screen>-<mode>.jpg` (35-120 KB each).
+   - MP4: `ffmpeg -ss 1.5 -t 33 -i demo.mp4 -vf "fps=30,scale=540:-2:flags=lanczos" -c:v libx264 -crf 26 -preset slow -pix_fmt yuv420p -movflags +faststart -an docs/media/demo.mp4` (~2 MB).
+   - GIF for the README (GitHub doesn't play repo-path videos inline): `ffmpeg -ss 1.5 -t 33 -i demo.mp4 -vf "fps=10,scale=300:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" docs/media/demo.gif` (~3.7 MB).
+   - Check them with a contact sheet before committing: `ffmpeg -i demo.mp4 -vf "fps=1/2,scale=180:-1,tile=10x2" sheet.png`.
+8. **Cleanup.** Delete the test saves:
+   `A "content query --uri content://media/external/images/media --projection _id --where \"relative_path LIKE 'DCIM/Lumix%'\""`, then
+   `A content delete --uri content://media/external/images/media/<id>` for each. Then: demo mode `exit`, `A cmd uimode night no`, `$P stop`,
+   `curl "http://10.0.0.220/cam.cgi?mode=camcmd&value=playmode"`, stop the relay. Snoozed notifications come back by themselves.
+
 ## Untested on a real phone
 Everything above ran on the API 31 Pixel 5 emulator (the API 33 `lumix_s23plus` was added later and not yet run through the checklist) (plus the real camera over home Wi-Fi). Not verified on Cameron's phone:
 - The camera's own hotspot: live view over UDP to 192.168.54.x without a relay, saving and the Remote screen on `192.168.54.1`, and the real `joinCameraWifi` (SSID prefix, password, approval, release when the camera goes away).
