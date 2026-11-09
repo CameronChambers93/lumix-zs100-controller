@@ -139,7 +139,11 @@ The camera (or the fake) sends UDP to the host's LAN address, but the emulator o
 A live view that stalls after startup: close and reopen Remote (re-sending `startstream`, with or without `stopstream`, did not revive it once).
 
 ## README screenshots and demo reel
-How `docs/media/` was made (2026-11-09, `lumix_s23plus`, real camera on home Wi-Fi). Takes ~20 min; the camera must stay on its
+**Script:** `bash mobile/tools/media.sh` runs all of the steps below (~5 min), or some of them: `media.sh shots encode`
+(steps `setup shots notify reel encode cleanup`; `MODES=dark` for one theme only, `MEDIA=<dir>` to encode elsewhere). Look at
+`mobile/tools/out/reel-sheet.png` and the JPEGs before committing. The steps explain what it does and why.
+
+How `docs/media/` was made (2026-11-09, `lumix_s23plus`, real camera on home Wi-Fi). By hand it took ~20 min; the camera must stay on its
 Wi-Fi waiting screen the whole time (turn off its sleep mode). Raw captures go to `mobile/tools/out/raw/` (scratch).
 `A` below is `adb -s 192.168.65.254:5555 shell`. In zsh, wrap commands in functions or a `bash` script: `A="adb ... shell"; $A ...` fails because zsh doesn't split words.
 
