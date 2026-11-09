@@ -1,0 +1,41 @@
+{
+  "name": "${localWorkspaceFolderBasename}",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "vscode",
+  // 8420: the web app, published on every interface so phones on the LAN can reach it.
+  "runArgs": ["--add-host=host.docker.internal:host-gateway", "-p", "8420:8420"],
+  "mounts": [
+    // Shared by every dc project: log in to Claude once, in any container.
+    "source=dc-claude-config,target=/home/vscode/.claude,type=volume",
+    // Shared by every dc project: GitHub token written by `dc github-login` (read-only here).
+    "source=dc-git-credentials,target=/dc-git,type=volume,readonly",
+    // Cameron's knowledge vault (Obsidian), shared read-write by every dc project.
+    "source=C:/Users/Cameron/Projects/obsidian,target=/vault,type=bind",
+    // Where synced photos land on the PC.
+    "source=C:/Users/Cameron/Pictures/Lumix,target=/photos,type=bind",
+    // Gradle downloads (~1 GB) survive rebuilds.
+    "source=dc-lumix-gradle,target=/home/vscode/.gradle,type=volume"
+  ],
+  "containerEnv": {
+    "LUMIX_LIBRARY": "/photos",
+    "LUMIX_LIBRARY_LABEL": "Pictures\\Lumix",
+    "LUMIX_CAMERA": "10.0.0.220",
+    // Host services (Anki, etc.) are reachable at host.docker.internal.
+    // Git reads the shared GitHub token (see `dc github-login`); lookups only, as the volume is read-only.
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "credential.https://github.com.helper",
+    "GIT_CONFIG_VALUE_0": "!f() { test \"$1\" != get || git credential-store --file=/dc-git/credentials get; }; f"
+  },
+  // Runs once after the container is created, e.g. "pip install -e ."
+  "postCreateCommand": "",
+  // Start the web app on every container start (log: /tmp/lumix.log).
+  "postStartCommand": "sh app/start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code"]
+    }
+  }
+}

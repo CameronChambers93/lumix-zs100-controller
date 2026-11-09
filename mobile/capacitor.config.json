@@ -1,0 +1,12 @@
+{
+  "appId": "com.cameron.lumix",
+  "appName": "Lumix",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "http"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

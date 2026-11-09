@@ -1,0 +1,1721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="themeMeta" content="#f6f5f2">
+<title>Lumix</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --surface: #ffffff; --surface-2: #eeece7; --text: #1b1b1d; --muted: #6b6a66;
+    --line: #e2e0da; --accent: #c8102e; --accent-text: #fff; --ok: #1f8a4c; --warn: #b26a00;
+    --shadow: 0 1px 2px rgb(0 0 0 / .06), 0 4px 16px rgb(0 0 0 / .06);
+    color-scheme: light;
+  }
+  /* The theme setting (System / Light / Dark) is applied as data-theme on <html>; the media query only covers the
+     moment before the script runs. */
+  :root[data-theme="dark"] {
+    --bg: #111214; --surface: #1a1b1e; --surface-2: #24262a; --text: #ecebe8; --muted: #9a9993;
+    --line: #2c2e33; --accent: #e5334f; --ok: #3cc47a; --warn: #e5a03a; --shadow: none;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #111214; --surface: #1a1b1e; --surface-2: #24262a; --text: #ecebe8; --muted: #9a9993;
+      --line: #2c2e33; --accent: #e5334f; --ok: #3cc47a; --warn: #e5a03a; --shadow: none;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-top: env(safe-area-inset-top); }
+  .bar { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+  .brand { font-weight: 700; font-size: 18px; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+  .brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  #camText { overflow: hidden; text-overflow: ellipsis; }
+  .pill { min-width: 0; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px;
+    background: var(--surface-2); color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.on { color: var(--text); } .pill.on .dot { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+  .spacer { flex: 1; }
+  .icon-btn { color: var(--text); border: 0; background: transparent; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; }
+  .icon-btn[hidden] { display: none; }
+  .icon-btn:hover { background: var(--surface-2); }
+  .icon-btn svg { width: 20px; height: 20px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin: 4px 0 16px; }
+  .sync { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .sync h2 { margin: 0; font-size: 17px; }
+  .sync p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .sync .text { flex: 1; min-width: 180px; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 16px; font-weight: 600; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .progress { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-top: 12px; width: 100%; }
+  .progress b { display: block; height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+  .notice { color: var(--muted); font-size: 13px; }
+  .notice ol { margin: 6px 0 0; padding-left: 20px; }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+  .toolbar .btn { padding: 7px 12px; font-size: 14px; }
+  .toolbar.second { margin-bottom: 12px; }
+  .searchbar { margin: 0 0 10px; }
+  .menu { position: absolute; right: 16px; z-index: 7; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 8px 30px rgb(0 0 0 / .2); padding: 4px; min-width: 160px; }
+  .menu button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 10px 12px; border-radius: 8px; }
+  .menu button.on { font-weight: 700; color: var(--accent); }
+  .menu button:hover { background: var(--surface-2); }
+  .day { position: sticky; top: var(--hdr, 60px); z-index: 4; margin: 0; padding: 8px 2px 6px; font-size: 14px; font-weight: 700;
+    background: var(--bg); }
+  @supports (background: color-mix(in srgb, red, blue)) {   /* older WebViews drop color-mix at computed-value time, leaving it transparent */
+    header { background: color-mix(in srgb, var(--bg) 88%, transparent); }
+    .day { background: color-mix(in srgb, var(--bg) 92%, transparent); }
+  }
+  .day small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .day-group { margin-bottom: 8px; }
+  .tile img.local { transform: none; }
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; font-size: 14px; color: var(--muted); }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .count { color: var(--muted); font-size: 13px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 4px; }
+  @media (min-width: 700px) { .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; } }
+  .tile { position: relative; aspect-ratio: 1; border: 0; padding: 0; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s;  transform: scale(1.13); }
+  /* The camera's 160x120 thumbnails letterbox 3:2 photos; the zoom crops the black bars. */
+  .tile img.loaded { opacity: 1; }
+  .tile .badge { position: absolute; right: 5px; bottom: 5px; width: 20px; height: 20px; border-radius: 50%;
+    display: grid; place-items: center; background: rgb(0 0 0 / .55); color: #fff; }
+  .tile .badge svg { width: 12px; height: 12px; }
+  .tile .badge.ok { background: var(--ok); }
+  .tile .vid { position: absolute; left: 5px; bottom: 5px; padding: 1px 6px; border-radius: 6px; background: rgb(0 0 0 / .6); color: #fff; font-size: 11px; }
+  .tile .check { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff;
+    background: rgb(0 0 0 / .25); display: none; place-items: center; color: #fff; }
+  .selecting .tile .check { display: grid; }
+  .tile.sel .check { background: var(--accent); border-color: var(--accent); }
+  .tile.sel::after { content: ""; position: absolute; inset: 0; border: 3px solid var(--accent); border-radius: 6px; }
+  .tile.sel img { filter: brightness(.8); }
+  .tile .check svg { width: 13px; height: 13px; opacity: 0; } .tile.sel .check svg { opacity: 1; }
+  .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
+  .grid, .tile { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .tile img { pointer-events: none; -webkit-user-drag: none; }
+  .selecting .wrap { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+  .day { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+  .daycheck { display: none; flex: none; width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid var(--muted);
+    background: transparent; color: #fff; place-items: center; position: relative; }
+  .daycheck::before { content: ""; position: absolute; inset: -8px; }   /* bigger touch target */
+  .daycheck svg { width: 13px; height: 13px; opacity: 0; }
+  .selecting .daycheck { display: grid; }
+  .daycheck.on { background: var(--accent); border-color: var(--accent); } .daycheck.on svg { opacity: 1; }
+
+  .ptr { position: fixed; left: 50%; top: var(--hdr, 60px); z-index: 4; width: 36px; height: 36px; margin-left: -18px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; place-items: center;
+    transform: translateY(-48px); opacity: 0; pointer-events: none; color: var(--muted); }
+  .ptr svg { width: 18px; height: 18px; transition: transform .15s; } .ptr.ready svg { transform: rotate(180deg); }
+  .ptr.busy svg { display: none; } .ptr .spin { display: none; margin: 0; border-color: var(--line); border-top-color: var(--accent); }
+  .ptr.busy .spin { display: block; }
+  .ptr.anim { transition: transform .2s, opacity .2s; }
+
+  .fast { position: fixed; right: 0; top: 0; bottom: 0; width: 0; z-index: 6; pointer-events: none; }
+  .fast-thumb { position: absolute; right: 0; top: 0; width: 44px; height: 56px; pointer-events: none; touch-action: none; opacity: 0; transition: opacity .25s; }
+  .fast.show .fast-thumb { opacity: 1; pointer-events: auto; }
+  .fast-thumb::after { content: ""; position: absolute; right: 8px; top: 8px; width: 6px; height: 40px; border-radius: 3px; background: var(--muted); opacity: .8; transition: width .15s, background .15s; }
+  .fast.drag .fast-thumb::after { width: 10px; background: var(--accent); opacity: 1; }
+  .fast-bubble { position: absolute; right: 40px; top: 0; padding: 6px 12px; border-radius: 10px; background: var(--text); color: var(--bg);
+    font-size: 14px; font-weight: 600; white-space: nowrap; opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .fast.drag .fast-bubble { opacity: 1; }
+
+  .selbar { position: fixed; left: 50%; transform: translate(-50%, 150%); bottom: calc(16px + env(safe-area-inset-bottom));
+    background: var(--surface); border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(0 0 0 / .2); border-radius: 16px;
+    padding: 10px 10px 10px 16px; display: none; gap: 8px; align-items: center; flex-wrap: wrap; transition: transform .2s; width: min(560px, calc(100% - 32px)); z-index: 6; }
+  .selbar.show { transform: translate(-50%, 0); display: flex; }
+  .selbar .n { flex: 1 1 40%; font-weight: 600; }
+  .selbar .btn { padding: 8px 12px; flex: 1 1 40%; }
+  .selbar #selAll { flex: 0 0 auto; }
+
+  .lightbox { position: fixed; inset: 0; background: #0b0b0c; z-index: 10; display: none; flex-direction: column; color: #fff; }
+  .lightbox.show { display: flex; }
+  .lb-top, .lb-bottom { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+  .lb-top { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .lb-bottom { padding-bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; }
+  .lb-top .name { flex: 1; font-size: 14px; } .lb-top .name small { display: block; color: #aaa; }
+  .lightbox .icon-btn { color: #fff; } .lightbox .icon-btn:hover { background: rgb(255 255 255 / .1); }
+  .lb-stage { flex: 1; min-height: 0; display: grid; place-items: center; position: relative; touch-action: none; overflow: hidden; }
+  .lb-stage img, .lb-stage video { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lb-stage img { transform-origin: 50% 50%; will-change: transform; user-select: none; -webkit-user-drag: none; }
+  .lb-stage img.snap { transition: transform .2s ease-out; }
+  .spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgb(255 255 255 / .35); border-top-color: #fff;
+    animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .lb-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; max-height: 70%; overflow-y: auto; background: var(--surface); color: var(--text);
+    border-radius: 16px 16px 0 0; padding: 14px 18px calc(16px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 30px rgb(0 0 0 / .35); }
+  .lb-info[hidden] { display: none; }
+  .lb-info h3 { margin: 0 0 8px; font-size: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .lb-info h3 .icon-btn { color: var(--text); }
+  .lb-info dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; }
+  .lb-info dt { color: var(--muted); } .lb-info dd { margin: 0; overflow-wrap: anywhere; }
+  .lb-info .note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  .lightbox .btn { background: rgb(255 255 255 / .12); border-color: transparent; color: #fff; text-decoration: none; }
+  .lightbox .btn.primary { background: var(--accent); }
+
+  dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--text); padding: 20px; width: min(420px, calc(100% - 32px)); }
+  dialog::backdrop { background: rgb(0 0 0 / .4); }
+  dialog h3 { margin: 0 0 12px; }
+  select { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  label.check { display: flex; gap: 10px; align-items: center; color: var(--text); font-size: 14px; margin-top: 16px; }
+  label.check input { width: auto; }
+  .failbox { width: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--warn); font-size: 14px; }
+  .failbox span { flex: 1; min-width: 140px; }
+  .failbox .btn { padding: 6px 12px; font-size: 14px; }
+  .failbox[hidden] { display: none; }
+  #failList { margin: 0; padding-left: 18px; max-height: 50vh; overflow-y: auto; font-size: 13px; }
+  #failList li { margin-bottom: 6px; overflow-wrap: anywhere; } #failList small { display: block; color: var(--muted); }
+  dialog.sheet { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--bg); }
+  dialog.sheet[open] { display: flex; flex-direction: column; }
+  .sheet-top { display: flex; align-items: center; gap: 6px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .sheet-top h3 { margin: 0; font-size: 18px; }
+  .sheet-body { flex: 1; overflow-y: auto; padding: 4px 16px calc(24px + env(safe-area-inset-bottom)); max-width: 640px; width: 100%; margin: 0 auto; }
+  .sec { margin: 18px 0 0; }
+  .sec h4 { margin: 0 0 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .sec .box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px 14px; }
+  .sec .box > label:first-child, .sec .box > p:first-child { margin-top: 12px; }
+  .sec p.notice { margin: 8px 0 0; }
+  .sec .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .sec .btn { padding: 8px 14px; }
+  .sec .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 8px; }
+  .sec input, .sec select { min-width: 0; }
+  .sec dl { margin: 10px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; }
+  .sec dt { color: var(--muted); } .sec dd { margin: 0; overflow-wrap: anywhere; }
+  .found { display: block; width: 100%; text-align: left; margin-top: 8px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+  input { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); }
+  .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  /* Remote shooting */
+  .remote { position: fixed; inset: 0; background: #0b0b0c; z-index: 11; display: none; flex-direction: column; color: #fff; }
+  .remote.show { display: flex; }
+  .remote .icon-btn { color: #fff; } .remote .icon-btn:hover { background: rgb(255 255 255 / .1); }
+  .rm-top { display: flex; align-items: center; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; }
+  .rm-top .name { flex: 1; font-size: 14px; } .rm-top .name small { display: block; color: #aaa; }
+  .rm-stage { flex: 1; min-height: 0; position: relative; background: #000; touch-action: manipulation; overflow: hidden; }
+  .rm-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+  .rm-msg { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; color: #bbb; padding: 0 24px; pointer-events: none; }
+  .rm-msg[hidden] { display: none; }
+  .rm-focus { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 2px solid #ffd33d; border-radius: 6px; pointer-events: none; opacity: 0; }
+  .rm-focus.show { animation: rmfocus 1.4s ease-out; }
+  @keyframes rmfocus { 0% { opacity: 1; transform: scale(1.5); } 15% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+  .rm-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .rm-flash.show { animation: rmflash .25s ease-out; }
+  @keyframes rmflash { 0% { opacity: .85; } 100% { opacity: 0; } }
+  .rm-rec { position: absolute; left: 12px; top: 12px; padding: 3px 10px; border-radius: 99px; background: rgb(0 0 0 / .6); color: #fff; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .rm-rec::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #ff3b30; margin-right: 7px; animation: blink 1s steps(2, start) infinite; }
+  @keyframes blink { to { opacity: .25; } }
+  .rm-rec[hidden] { display: none; }
+  .rm-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .rm-zoom { display: flex; gap: 8px; justify-content: flex-start; }
+  .rm-zoom button { width: 52px; height: 52px; border-radius: 50%; border: 0; background: rgb(255 255 255 / .14); color: #fff; font-size: 20px; font-weight: 700; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .rm-zoom button:active, .rm-zoom button.held { background: rgb(255 255 255 / .35); }
+  .rm-shutter { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #fff; background: transparent; padding: 0; display: grid; place-items: center; }
+  .rm-shutter i { width: 58px; height: 58px; border-radius: 50%; background: #fff; transition: transform .1s, border-radius .15s; }
+  .rm-shutter:active i { transform: scale(.88); }
+  .rm-shutter.video i { background: #ff3b30; }
+  .rm-shutter.video.on i { border-radius: 10px; transform: scale(.55); }
+  .rm-shutter:disabled { opacity: .5; }
+  .rm-side { display: flex; justify-content: flex-end; }
+  .rm-side .seg { background: rgb(255 255 255 / .14); }
+  .rm-side .seg button { color: #ccc; } .rm-side .seg button.on { background: #fff; color: #111; box-shadow: none; }
+  .rm-side .seg button:disabled { opacity: .5; }
+  .toast { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top)); transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 8px 14px; border-radius: 10px; font-size: 14px; z-index: 20; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><i></i>Lumix</div>
+    <span class="pill" id="camPill"><span class="dot"></span><span id="camText">Looking for camera…</span></span>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="remoteBtn" title="Remote shooting" aria-label="Remote shooting" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button class="icon-btn" id="searchBtn" title="Search" aria-label="Search" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    <button class="icon-btn" id="refreshBtn" title="Refresh from camera" aria-label="Refresh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="sync">
+      <div class="text"><h2 id="syncTitle">…</h2><p id="syncSub"></p></div>
+      <button class="btn" id="cancelBtn" hidden>Cancel</button>
+      <button class="btn primary" id="syncBtn" disabled>Save to phone</button>
+      <div class="progress" id="progress" hidden><b></b></div>
+      <div class="failbox" id="failBox" hidden><span id="failText"></span>
+        <button class="btn" id="failRetry">Retry</button><button class="btn" id="failDetails">Details</button></div>
+    </div>
+    <div class="notice" id="offlineHelp" hidden>
+      <p style="margin:10px 0 4px"><b>Away from home</b> (camera's own Wi-Fi):</p>
+      <ol>
+        <li>Camera: <b>Wi-Fi</b> → <b>New Connection</b> → <b>Remote Shooting &amp; View</b> → <b>Direct</b>.</li>
+        <li>Phone: join the camera's Wi-Fi network (name and password are on the camera screen). Ignore "no internet".</li>
+      </ol>
+      <p style="margin:10px 0 4px"><b>At home</b>: same menu, but choose <b>Via Network</b> and your home Wi-Fi.</p>
+      <p style="margin:8px 0 0">This screen connects on its own within a few seconds.</p>
+    </div>
+  </section>
+
+  <div class="searchbar" id="searchBar" hidden>
+    <input id="searchIn" type="search" aria-label="Search file names" placeholder="Search file names" autocomplete="off">
+  </div>
+  <div class="toolbar">
+    <div class="seg" id="filter" role="group" aria-label="Show">
+      <button data-f="all" class="on" aria-pressed="true">All</button><button data-f="new" aria-pressed="false">New</button><button data-f="local" aria-pressed="false">Saved</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="sortBtn" aria-haspopup="menu" aria-expanded="false">Newest first</button>
+    <button class="btn" id="selectBtn">Select</button>
+  </div>
+  <div class="toolbar second">
+    <div class="seg" id="kindFilter" role="group" aria-label="Type">
+      <button data-k="all" class="on" aria-pressed="true">All</button><button data-k="photo" aria-pressed="false">Photos</button><button data-k="video" aria-pressed="false">Videos</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="menu" id="sortMenu" role="menu" hidden>
+    <button role="menuitem" data-s="desc">Newest first</button><button role="menuitem" data-s="asc">Oldest first</button>
+  </div>
+  <div id="days"></div>
+  <div class="empty" id="empty" hidden></div>
+</main>
+
+<div class="ptr" id="ptr" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg><span class="spin"></span>
+</div>
+<div class="fast" id="fast" aria-hidden="true">
+  <div class="fast-bubble" id="fastBubble"></div>
+  <div class="fast-thumb" id="fastThumb"></div>
+</div>
+<div class="selbar" id="selbar">
+  <span class="n" id="selN">0 selected</span>
+  <button class="btn" id="selAll">Select all</button>
+  <button class="btn" id="selShare">Share</button>
+  <button class="btn primary" id="selSave">Save</button>
+</div>
+
+<div class="lightbox" id="lb" role="dialog" aria-modal="true">
+  <div class="lb-top">
+    <div class="name" id="lbName"></div>
+    <button class="icon-btn" id="lbInfoBtn" aria-label="Details" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".6" fill="currentColor"/></svg></button>
+    <button class="icon-btn" id="lbShare" aria-label="Share" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></button>
+    <button class="icon-btn" id="lbOpen" aria-label="Open in another app" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></button>
+    <button class="icon-btn" id="lbClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="lb-stage" id="lbStage"></div>
+  <div class="lb-info" id="lbInfo" role="region" aria-label="Details" hidden>
+    <h3>Details <button class="icon-btn" id="lbInfoClose" aria-label="Close details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <dl id="lbInfoList"></dl>
+    <p class="note" id="lbInfoNote" hidden></p>
+  </div>
+  <div class="lb-bottom">
+    <button class="btn" id="lbFull" hidden>Full size</button>
+    <button class="btn primary" id="lbSave">Save to phone</button>
+  </div>
+</div>
+
+<div class="remote" id="remote" role="dialog" aria-modal="true" aria-label="Remote shooting">
+  <div class="rm-top">
+    <button class="icon-btn" id="rmClose" aria-label="Close remote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="name">Remote<small id="rmInfo" aria-live="polite"></small></div>
+  </div>
+  <div class="rm-stage" id="rmStage">
+    <img id="lvImg" alt="Live view from the camera" hidden>
+    <div class="rm-msg" id="rmMsg">Starting live view…</div>
+    <div class="rm-focus" id="rmFocus"></div>
+    <div class="rm-flash" id="rmFlash"></div>
+    <div class="rm-rec" id="rmRec" hidden>0:00</div>
+  </div>
+  <div class="rm-bar">
+    <div class="rm-zoom" role="group" aria-label="Zoom">
+      <button id="zoomW" aria-label="Zoom out (hold)">W</button><button id="zoomT" aria-label="Zoom in (hold)">T</button>
+    </div>
+    <button class="rm-shutter" id="rmShutter" aria-label="Take photo"><i></i></button>
+    <div class="rm-side"><div class="seg" id="rmMode" role="group" aria-label="Mode">
+      <button data-m="photo" class="on" aria-pressed="true">Photo</button><button data-m="video" aria-pressed="false">Video</button>
+    </div></div>
+  </div>
+</div>
+
+<dialog id="settings" class="sheet" aria-labelledby="setTitle">
+  <div class="sheet-top">
+    <button class="icon-btn" id="setBack" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <h3 id="setTitle">Settings</h3>
+  </div>
+  <div class="sheet-body">
+    <section class="sec"><h4>Camera</h4><div class="box">
+      <p class="notice" id="setCamStat" aria-live="polite"></p>
+      <label for="ipIn">Address on your home Wi-Fi</label>
+      <input id="ipIn" inputmode="decimal" autocomplete="off" placeholder="10.0.0.220">
+      <p class="notice">The app finds the camera on its own, also when your router gives it a new address. You only need this to force one. On the camera's own Wi-Fi it's always 192.168.54.1.</p>
+      <div class="btns"><button class="btn" id="findBtn">Find camera</button></div>
+      <div id="findOut" aria-live="polite"></div>
+      <label class="check"><input type="checkbox" id="joinIn"> Join the camera's Wi-Fi automatically</label>
+      <div id="joinBox" hidden>
+        <div class="pair">
+          <div><label for="ssidIn">Network name starts with</label><input id="ssidIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ZS100-"></div>
+          <div><label for="pwIn">Password</label><input id="pwIn" type="password" autocomplete="off" placeholder="From the camera screen"></div>
+        </div>
+        <p class="notice">On the camera choose Wi-Fi, New connection, Remote Shooting &amp; View, Direct: its screen shows the name and password. The first time, Android asks you to approve joining it (one tap). Only tried while the app is open and the camera isn't found on your current Wi-Fi.</p>
+        <div class="btns"><button class="btn" id="joinNow">Join now</button></div>
+        <p class="notice" id="joinOut" aria-live="polite"></p>
+      </div>
+    </div></section>
+    <section class="sec"><h4>Saving</h4><div class="box">
+      <label for="dirBase">Folder in your gallery</label>
+      <div class="pair">
+        <select id="dirBase" aria-label="Gallery location"><option value="DCIM">DCIM</option><option value="Pictures">Pictures</option></select>
+        <input id="dirName" aria-label="Folder name" autocomplete="off" spellcheck="false" placeholder="Lumix">
+      </div>
+      <p class="notice" id="dirNote">New saves go here. Photos saved earlier to other folders still count as saved.</p>
+      <label for="parIn">Downloads at once</label>
+      <select id="parIn"><option value="1">1</option><option value="2">2</option></select>
+      <label class="check"><input type="checkbox" id="autoIn"> Save new files automatically when the camera connects</label>
+    </div></section>
+    <section class="sec"><h4>Location</h4><div class="box">
+      <label class="check"><input type="checkbox" id="locIn"> Record location while out shooting</label>
+      <p class="notice">The camera has no GPS. While this is on, the phone notes where it is every couple of minutes, and whenever you move 100 m, with a notification showing. Photos you save get the place they were taken, matched by time (within 10 minutes) using the camera's clock. The app can't set that clock, so check it on the camera (Setup menu, Clock Set).</p>
+      <p class="notice" id="locStat" aria-live="polite"></p>
+      <div class="btns"><button class="btn" id="locClear">Clear location log</button></div>
+    </div></section>
+    <section class="sec"><h4>Appearance</h4><div class="box" style="padding-top:12px">
+      <div class="seg" id="themeSeg" role="group" aria-label="Theme">
+        <button data-t="system" aria-pressed="false">System</button><button data-t="light" aria-pressed="false">Light</button><button data-t="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div></section>
+    <section class="sec"><h4>About</h4><div class="box"><dl id="aboutList"></dl></div></section>
+  </div>
+</dialog>
+<dialog id="failDlg" aria-labelledby="failTitle">
+  <h3 id="failTitle">Couldn't be saved</h3>
+  <ol id="failList"></ol>
+  <div class="row"><button class="btn" id="failClose">Close</button></div>
+</dialog>
+<dialog id="spaceDlg" aria-labelledby="spaceTitle">
+  <h3 id="spaceTitle">Not enough space</h3>
+  <p id="spaceText"></p>
+  <div class="row"><button class="btn" id="spaceNo">Cancel</button><button class="btn primary" id="spaceYes">Save what fits</button></div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script src="capacitor.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const Native = window.Capacitor?.registerPlugin?.("LumixNative");
+const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICON_CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+const HOTSPOT_IP = "192.168.54.1";
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let appId = store.get("appId", null);
+if (!appId) {
+  appId = "4D454930-0100-1000-8002-" + [...crypto.getRandomValues(new Uint8Array(6))].map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  store.set("appId", appId);
+}
+
+const cam = { ip: null, online: false, batt: null, error: "" };
+let catalog = store.get("catalog", []);   // last listing, so the grid isn't empty while reconnecting
+let saved = new Map();                     // gallery file name -> {name,size,uri,mime,dateTaken,width,height,duration}
+let dates = store.get("dates", {});        // camera item id -> ms (an id's date never changes)
+let sortDir = store.get("sort", "desc"), kindFilter = "all", query = "";
+let items = [], byId = new Map();          // merged camera + phone list (see mergeItems)
+let lbId = null;
+const cfs = (u) => window.Capacitor.convertFileSrc(u);
+// Mirror of the native save queue (SaveService keeps running when the app is backgrounded).
+const sync = { running: false, done: 0, total: 0, bytes: 0, totalBytes: 0, current: [], failed: [], waiting: false, cancelled: false };
+let filter = "all", selecting = false, sel = new Set(), lbIndex = -1;
+const remote = { open: false, mode: "photo", recording: false, recStart: 0, timer: 0, shots: 0, frames: 0, busy: false };
+
+const fmtBytes = (b) => b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(0) + " MB" : (b / 1e3).toFixed(0) + " KB";
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const isSaved = (it) => it.source === "phone" || saved.get(it.name)?.size === it.size;
+const xml = (s) => new DOMParser().parseFromString(s, "text/xml");
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
+
+// ---- camera protocol (see ../PROTOCOL.md)
+async function httpGet(url, timeout = 4000) {
+  const r = await Native.httpGet({ url, timeout });
+  if (r.status !== 200) throw new Error(`HTTP ${r.status}`);
+  return r.body;
+}
+// The camera serves one app at a time; it answers others with HTTP 503 or err_already_connected.
+const BUSY_MSG = "The camera is connected to another device (like the PC page). Close it there and this app takes over.";
+class Busy extends Error { constructor() { super(BUSY_MSG); } }
+async function getState(ip) {
+  const r = await Native.httpGet({ url: `http://${ip}/cam.cgi?mode=getstate`, timeout: 3000 });
+  if (r.status === 503 || r.body.includes("err_already_connected")) throw new Busy();
+  if (r.status !== 200) throw new Error(`HTTP ${r.status}`);
+  const doc = xml(r.body);
+  return { ok: doc.querySelector("result")?.textContent === "ok", batt: doc.querySelector("batt")?.textContent, mode: doc.querySelector("cammode")?.textContent };
+}
+// The camera is sometimes found in rec mode (it goes back to its live view by itself after a client leaves), and the
+// phone should use it in playback mode (a listing right after a mode switch can answer HTTP 500; the listing retries). playmode is non-destructive; send it unless the Remote screen is using rec.
+async function ensurePlay(ip, mode) {
+  if (!mode || mode === "play" || remote.open || remote.closing) return;
+  try { await Native.httpGet({ url: `http://${ip}/cam.cgi?mode=camcmd&value=playmode`, timeout: 6000 }); await sleep(2000); } catch {}
+}
+async function pair(ip) {
+  const r = (await httpGet(`http://${ip}/cam.cgi?mode=accctrl&type=req_acc&value=${appId}&value2=lumix-phone`, 15000)).trim();
+  if (r.includes("err_already_connected")) throw new Busy();
+  if (!r.startsWith("ok")) throw new Error(`Camera refused the connection (${r})`);
+}
+function browseBody(start, count) {
+  return `<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>*</Filter><StartingIndex>${start}</StartingIndex><RequestedCount>${count}</RequestedCount><SortCriteria></SortCriteria></u:Browse></s:Body></s:Envelope>`;
+}
+function parseDur(item) {   // duration="0:00:01" on the original <res>, seconds
+  for (const r of item.getElementsByTagName("res")) {
+    const m = /^(\d+):(\d+):(\d+)/.exec(r.getAttribute("duration") || "");
+    if (m) return +m[1] * 3600 + +m[2] * 60 + +m[3];
+  }
+  return 0;
+}
+async function browseAll(ip) {
+  const url = `http://${ip}:60606/Server0/CDS_control`, out = [];
+  for (let start = 0, total = Infinity; start < total;) {
+    // A weak link (hotspot, emulator NAT) can cut a response short ("unexpected end of stream"). Retry the page,
+    // asking for fewer items each time, since small responses survive better.
+    let r;
+    for (const count of [50, 20, 10, 5]) {
+      try {
+        r = await Native.httpPost({ url, timeout: 30000, body: browseBody(start, count), headers: {
+          "Content-Type": 'text/xml; charset="utf-8"', SOAPACTION: '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"' } });
+        break;
+      } catch (e) {
+        if (count === 5) throw e;
+        await new Promise((ok) => setTimeout(ok, 400));
+      }
+    }
+    if (r.status !== 200) throw new Error(`Listing failed (HTTP ${r.status})`);
+    const env = xml(r.body);
+    total = +(env.getElementsByTagName("TotalMatches")[0]?.textContent || 0);
+    const got = +(env.getElementsByTagName("NumberReturned")[0]?.textContent || 0);
+    const didl = xml(env.getElementsByTagName("Result")[0]?.textContent || "<x/>");
+    for (const item of didl.getElementsByTagName("item")) {
+      const id = item.getAttribute("id"), res = {};
+      for (const r of item.getElementsByTagName("res")) {
+        const pn = /PANASONIC\.COM_PN=(\w+)/.exec(r.getAttribute("protocolInfo") || "");
+        if (pn) res[pn[1]] = { url: r.textContent.trim(), size: +r.getAttribute("size") };
+      }
+      if (!/^\d+$/.test(id || "") || !res.CAM_ORG) continue;
+      const ext = res.CAM_ORG.url.split(".").pop().toUpperCase();
+      const cls = item.getElementsByTagName("upnp:class")[0]?.textContent || "";
+      out.push({ id, name: `P${id}.${ext}`, size: res.CAM_ORG.size, kind: cls.includes("video") ? "video" : "photo",
+        orig: res.CAM_ORG.url, thumb: res.CAM_TN?.url, preview: res.CAM_LRGTN?.url, dur: parseDur(item) });
+    }
+    if (!got) break;
+    start += got;
+  }
+  return out.sort((a, b) => b.id - a.id);
+}
+
+// ---- connection loop
+let autoDone = false;
+async function tryIp(ip) {
+  let st = await getState(ip);
+  await pair(ip);
+  if (!st.ok) st = await getState(ip);
+  await ensurePlay(ip, st.mode);
+  Object.assign(cam, { ip, online: true, batt: st.batt, error: "", joinMsg: "" });
+  store.set("ip", ip);
+  await Promise.all([refreshCatalog(), refreshSaved()]);
+  if (!autoDone) { autoDone = true; if (store.get("autoSave", false) && !catalogFailed && !sync.running) autoSave(); }
+}
+// Not at the saved address: look for it. Multicast SSDP, then a sweep of the Wi-Fi's /24 (native), at most every 30 s
+// while offline (a button press ignores that). The router may hand the camera a new address; this heals it.
+const DISCOVER_EVERY = 30000;
+let lastDiscover = 0;
+const subnetOf = (ip) => { const m = /^(\d+\.\d+\.\d+)\.\d+$/.exec(ip || ""); return m ? m[1] + "." : null; };
+const discoverArgs = (timeout) => ({ timeout, subnets: [subnetOf(store.get("homeIp", "10.0.0.220"))].filter(Boolean) });
+async function discoverCamera(force) {
+  if (!force && Date.now() - lastDiscover < DISCOVER_EVERY) return false;
+  lastDiscover = Date.now();
+  cam.searching = true; renderStatus();
+  let res;
+  try { res = await Native.discover(discoverArgs(1500)); }
+  catch { return false; }
+  finally { cam.searching = false; lastDiscover = Date.now(); }   // 30 s counted from the end of a search
+  const found = res.cameras?.[0];
+  if (!found) return false;
+  if (found.ip !== store.get("homeIp", "10.0.0.220")) toast(`Found the camera at ${found.ip}`);
+  store.set("homeIp", found.ip); store.set("ip", found.ip);
+  if (found.state === "busy") { cam.error = BUSY_MSG; return false; }   // it's there; the loop picks it up at the new address
+  try { await tryIp(found.ip); return true; } catch (e) { if (e instanceof Busy) cam.error = BUSY_MSG; return false; }
+}
+// Auto-join the camera's own Wi-Fi (Android asks for approval itself, once). Foreground only, never during a save,
+// and not more often than every minute, backing off (1, 2, 4... up to 10 min) while it keeps failing.
+let lastJoin = 0, joinFails = 0, joinedByUs = false, offlineSince = 0;
+async function maybeJoinHotspot(manual) {
+  if (!store.get("joinHot", false) || sync.running || document.hidden) return false;
+  if (!manual && Date.now() - lastJoin < Math.min(60000 * 2 ** joinFails, 600000)) return false;
+  lastJoin = Date.now();
+  cam.joining = true; cam.joinMsg = ""; renderStatus();
+  try {
+    await Native.joinCameraWifi({ timeout: 45000 });
+    joinFails = 0; joinedByUs = true;
+    await Native.bindWifi();
+    await tryIp(HOTSPOT_IP);
+    return true;
+  } catch (e) {
+    if (e instanceof Busy) { cam.error = BUSY_MSG; return false; }
+    joinFails++;
+    cam.joinMsg = String(e.message || e).replace(/^Error: /, "");
+    return false;
+  } finally { cam.joining = false; renderStatus(); }
+}
+async function connect({ force = false } = {}) {
+  autoDone = false;
+  try { await Native.bindWifi(); } catch {}
+  const candidates = [...new Set([store.get("ip", null), HOTSPOT_IP, store.get("homeIp", "10.0.0.220")].filter(Boolean))];
+  for (const ip of candidates) {
+    try {
+      await tryIp(ip);
+      return true;
+    } catch (e) {
+      if (e instanceof Busy) { cam.error = BUSY_MSG; return false; }
+      if (!/timeout|connect|unreachable|refused|Network|failed to/i.test(String(e))) cam.error = String(e.message || e);
+    }
+  }
+  if (cam.error === BUSY_MSG) cam.error = "";
+  if (await discoverCamera(force)) return true;
+  return maybeJoinHotspot(force);
+}
+async function loop() {
+  for (;;) {
+    if (sync.running) { renderStatus(); await sleep(2000); continue; }   // the service keeps the camera session during a save
+    if (cam.online) {
+      Native.bindWifi().catch(() => {});   // cheap; follows the Wi-Fi network if it was replaced (WebView image loads use the process binding)
+      try { const st = await getState(cam.ip); cam.batt = st.batt; if (!st.ok) await pair(cam.ip); await ensurePlay(cam.ip, st.mode); if (catalogFailed && !sync.running) refreshCatalog(); }
+      catch (e) { cam.online = false; if (e instanceof Busy) cam.error = BUSY_MSG; }
+    } else {
+      if (joinedByUs && offlineSince && Date.now() - offlineSince > 120000) { joinedByUs = false; Native.leaveCameraWifi().catch(() => {}); }   // the camera is gone for good
+      await connect();
+    }
+    if (cam.online) offlineSince = 0; else if (!offlineSince) offlineSince = Date.now();
+    renderStatus();
+    await sleep(cam.online ? 5000 : 3000);
+  }
+}
+// The camera's server is tiny: while the listing runs, thumbnails and date lookups wait (they would starve it).
+let browsing = false, catalogFailed = false;
+async function refreshCatalog() {
+  if (browsing || remote.open) return;
+  browsing = true;
+  try {
+    Native.stopDates().catch(() => {});
+    for (let i = 0; i < 30 && thumbActive > 0; i++) await sleep(200);   // let requests in flight finish
+    try { await ensurePlay(cam.ip, (await getState(cam.ip)).mode); } catch {}
+    let err = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { catalog = await browseAll(cam.ip); store.set("catalog", catalog); err = null; break; }
+      catch (e) { err = e; try { await ensurePlay(cam.ip, (await getState(cam.ip)).mode); } catch {} await sleep(1500); }  // e.g. HTTP 500 right after a mode switch
+    }
+    catalogFailed = !!err;
+    cam.error = err ? `Couldn't list the photos: ${err.message || err}` : "";
+  } finally { browsing = false; }
+  render();
+  pumpThumbs();
+  startDates();
+}
+// Every folder ever used stays in the list, so files saved before a folder change still count as saved.
+const DEFAULT_DIR = "DCIM/Lumix/";
+const curFolder = () => store.get("folder", DEFAULT_DIR);
+const allFolders = () => [...new Set([DEFAULT_DIR, curFolder(), ...store.get("folders", [])])];
+async function refreshSaved() {
+  try { const r = await Native.listSaved({ folders: allFolders() }); saved = new Map(r.files.map((f) => [f.name, f])); } catch {}
+  render();
+}
+
+// ---- dates: the camera's Browse has none; X-REC_DATE_TIME (local time, no zone) comes with any media request
+function parseCamDate(s) {
+  const m = /^(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/.exec(s || "");
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : 0;
+}
+let dateTimer = 0;
+function setDate(id, str) {
+  const ms = parseCamDate(str);
+  if (!ms || dates[id] === ms) return;
+  dates[id] = ms;
+  clearTimeout(dateTimer);
+  dateTimer = setTimeout(() => { store.set("dates", dates); render(); }, 600);
+}
+Native?.addListener("date", (d) => setDate(d.id, d.date));
+function startDates() {   // background, newest first; saving and listing have priority
+  if (sync.running || browsing || lbIndex >= 0 || remote.open || !cam.online) return;   // the open viewer / remote has priority over date lookups
+  const todo = catalog.filter((i) => !dates[i.id] && i.thumb).sort((a, b) => b.id - a.id);
+  if (todo.length) Native.camDates({ items: todo.map((i) => ({ id: i.id, url: i.thumb })) }).catch(() => {});
+}
+
+setInterval(() => { if (cam.online && !sync.running && lbIndex < 0 && !remote.open && catalog.some((i) => !dates[i.id] && i.thumb)) startDates(); }, 20000);   // the run gives up when the camera stalls; pick it up again
+
+// One list: the camera's catalog, plus saved files the catalog doesn't have (they still show with the camera off).
+function mergeItems() {
+  const out = [], names = new Set();
+  for (const c of catalog) {
+    names.add(c.name);
+    const f = saved.get(c.name), ok = f && f.size === c.size;
+    out.push({ ...c, uri: ok ? f.uri : undefined, w: ok ? f.width : 0, h: ok ? f.height : 0,
+      dateKnown: !!dates[c.id] || (ok && !!f.dateTaken), date: dates[c.id] || (ok ? f.dateTaken : 0), source: "camera" });
+  }
+  for (const f of saved.values()) {
+    if (names.has(f.name)) continue;
+    const m = /^P(\d+)\./i.exec(f.name), video = (f.mime || "").startsWith("video/");
+    out.push({ id: m ? m[1] : "f:" + f.name, name: f.name, size: f.size, kind: video ? "video" : "photo", uri: f.uri,
+      w: f.width, h: f.height, dur: Math.round((f.duration || 0) / 1000), date: f.dateTaken, dateKnown: true, source: "phone" });
+  }
+  // Items still without a date sit next to their neighbours by id (ids increase with time) and share their day.
+  const byIdAsc = out.filter((i) => !i.dateKnown && i.source === "camera").sort((a, b) => a.id - b.id);
+  if (byIdAsc.length) {
+    const known = out.filter((i) => i.dateKnown && /^\d+$/.test(i.id)).sort((a, b) => a.id - b.id);
+    for (const it of byIdAsc) {
+      let lo = null, hi = null;
+      for (const k of known) { if (+k.id < +it.id) lo = k; else { hi = k; break; } }
+      it.date = (lo || hi)?.date || 0;
+    }
+  }
+  items = out;
+  byId = new Map(out.map((i) => [i.id, i]));
+}
+
+// ---- saving (the queue itself is native: SaveQueue + SaveService)
+let wasRunning = false;
+function applyQueue(q) {
+  Object.assign(sync, { running: !!q.running, done: q.done || 0, total: q.total || 0, bytes: q.bytes || 0, totalBytes: q.totalBytes || 0,
+    current: q.current || [], failed: q.failed || [], waiting: !!q.waiting, cancelled: !!q.cancelled });
+  const ended = wasRunning && !sync.running;
+  wasRunning = sync.running;
+  renderStatus(); updateLbSave();
+  if (ended) {
+    const bad = sync.failed.length;
+    toast(bad ? `Saved ${sync.done - bad}, ${bad} failed` : sync.cancelled ? "Stopped" : "Saved to your gallery");
+    refreshSaved().then(() => updateLbSave());
+    startDates(); pumpThumbs();
+  }
+}
+Native?.addListener("queue", applyQueue);
+Native?.addListener("saved", (f) => {
+  saved.set(f.name, { name: f.name, size: f.size, uri: f.uri, mime: "", dateTaken: 0, width: 0, height: 0, duration: 0 });
+  const it = items.find((i) => i.name === f.name);
+  if (it) {
+    updateTile(it);
+    if (lbIndex >= 0 && lbId === it.id) { render(); showLb(); }
+  }
+});
+async function getFree() { return (await Native.freeSpace()).free; }
+function spaceDialog(need, free, fit) {
+  return new Promise((res) => {
+    const d = $("spaceDlg");
+    $("spaceText").textContent = `Needs ${fmtBytes(need)}, ${fmtBytes(free)} free. ` + (fit ? `Save the newest ${plural(fit.n, "file")} (${fmtBytes(fit.bytes)}) that fit?` : "Free up some space and try again.");
+    $("spaceYes").hidden = !fit;
+    let out = false;
+    $("spaceYes").onclick = () => { out = true; d.close(); };
+    $("spaceNo").onclick = () => d.close();
+    d.onclose = () => res(out);
+    d.showModal();
+  });
+}
+// The part of `todo` that fits in free space (keeping 200 MB spare); asks first unless this is an auto-save.
+async function checkSpace(todo, auto) {
+  const need = todo.reduce((s, i) => s + i.size, 0), MARGIN = 200e6;
+  let free;
+  try { free = await getFree(); } catch { return todo; }
+  if (need + MARGIN <= free) return todo;
+  const fit = []; let used = 0;
+  for (const i of [...todo].sort((a, b) => b.id - a.id)) { if (used + i.size > free - MARGIN) break; fit.push(i); used += i.size; }
+  fit.sort((a, b) => a.id - b.id);
+  if (auto) { toast(fit.length ? `Not enough space for all: saving the newest ${fit.length}` : "Not enough space to save"); return fit; }
+  return (await spaceDialog(need, free, fit.length ? { n: fit.length, bytes: used } : null)) ? fit : [];
+}
+async function askNotifications() {   // Android 13+ asks once; saving works if denied (just no progress notification)
+  if (store.get("notifAsked", false)) return;
+  store.set("notifAsked", true);
+  try { await Native.requestNotifications(); } catch {}
+}
+async function saveItems(list, { auto = false } = {}) {
+  if (sync.running) return toast("Already saving");
+  const todo = list.filter((i) => !isSaved(i)).sort((a, b) => a.id - b.id);
+  if (!todo.length) return auto ? 0 : toast("Already on your phone");
+  const fit = await checkSpace(todo, auto);
+  if (!fit.length) return;
+  await askNotifications();
+  Native.stopDates().catch(() => {});
+  try {
+    applyQueue(await Native.enqueue({ camIp: cam.ip, appId, folder: curFolder(), parallel: store.get("parallel", 1),
+      items: fit.map((i) => ({ url: i.orig, name: i.name, size: i.size, mime: i.kind === "video" ? "video/mp4" : "image/jpeg", date: dates[i.id] || 0 })) }));
+    if (auto) toast(`Saving ${plural(fit.length, "new file")}`);
+  } catch (e) { toast(String(e.message || e)); }
+}
+function autoSave() { saveItems(catalog.filter((i) => !isSaved(i)), { auto: true }); }
+const failedNow = () => sync.failed.filter((f) => !saved.has(f.name));
+$("failRetry").onclick = () => { const names = new Set(failedNow().map((f) => f.name)); saveItems(catalog.filter((i) => names.has(i.name))); };
+$("failDetails").onclick = () => {
+  const ul = $("failList"); ul.replaceChildren();
+  for (const f of failedNow()) { const li = document.createElement("li"); li.textContent = f.name; const sm = document.createElement("small"); sm.textContent = f.error; li.appendChild(sm); ul.appendChild(li); }
+  $("failDlg").showModal();
+};
+$("failClose").onclick = () => $("failDlg").close();
+
+// ---- rendering
+function renderStatus() {
+  const missing = catalog.filter((i) => !isSaved(i)).length;
+  $("camPill").classList.toggle("on", cam.online);
+  $("camText").textContent = cam.online ? `ZS100 · battery ${cam.batt || "?"}` : cam.searching ? "Searching…" : cam.joining ? "Joining Wi-Fi…" : "Camera offline";   // short: the card below has the full sentence
+  $("offlineHelp").hidden = cam.online || sync.running || cam.searching || cam.joining;
+  $("progress").hidden = $("cancelBtn").hidden = !sync.running;
+  $("syncBtn").hidden = sync.running;
+  $("remoteBtn").hidden = !(cam.online && !sync.running) && !remote.open;
+  if (remote.open) { $("rmInfo").textContent = remoteInfo(); if (!cam.online && !remote.closing) { toast("Lost the camera"); closeRemote(); } }
+  if (sync.running) {
+    const done = sync.bytes;
+    $("progress").firstElementChild.style.width = (sync.totalBytes ? 100 * done / sync.totalBytes : 0).toFixed(1) + "%";
+    $("syncTitle").textContent = `Saving ${Math.min(sync.done + 1, sync.total)} of ${sync.total}`;
+    $("syncSub").textContent = sync.waiting ? "Waiting for the camera…" : `${fmtBytes(done)} of ${fmtBytes(sync.totalBytes)} · carries on in the background`;
+  } else if (!cam.online) {
+    $("syncTitle").textContent = cam.searching ? "Searching for the camera…" : cam.joining ? "Joining the camera's Wi-Fi…" : "Camera not connected";
+    $("syncSub").textContent = cam.searching ? "Checking your Wi-Fi for the camera." : cam.joining ? "Approve the Android prompt if it appears." : cam.error || cam.joinMsg || "Connect the camera to Wi-Fi:";
+  } else if (missing) {
+    $("syncTitle").textContent = `${plural(missing, "new file")} on the camera`;
+    $("syncSub").textContent = cam.error || `Saves to your gallery (${curFolder().replace(/\/$/, "")})`;
+  } else {
+    $("syncTitle").textContent = "All caught up";
+    $("syncSub").textContent = `All ${plural(catalog.length, "file")} are on your phone.`;
+  }
+  $("syncBtn").disabled = !cam.online || !missing;
+  $("syncBtn").textContent = missing ? `Save ${missing} to phone` : "Save to phone";
+  const bad = sync.running ? [] : failedNow();
+  $("failBox").hidden = !bad.length;
+  $("failText").textContent = `${plural(bad.length, "file")} couldn't be saved`;
+}
+
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const fmtDate = (ms) => { const d = new Date(ms); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+const fmtDateTime = (ms) => { const d = new Date(ms); return `${fmtDate(ms)}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const fmtDur = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+function dayLabel(ms) {
+  if (!ms) return "Date unknown";
+  const d = new Date(ms), n = new Date();
+  const diff = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  const base = `${d.getDate()} ${MON[d.getMonth()]}`;
+  return d.getFullYear() === n.getFullYear() ? `${DOW[d.getDay()]} ${base}` : `${base} ${d.getFullYear()}`;
+}
+const dayKey = (ms) => { if (!ms) return "?"; const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+const idCmp = (a, b) => /^\d+$/.test(a.id) && /^\d+$/.test(b.id) ? a.id - b.id : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+
+function visible() {
+  const q = query.trim().toLowerCase(), dir = sortDir === "desc" ? -1 : 1;
+  return items.filter((i) => (filter === "all" || (filter === "new" ? !isSaved(i) : isSaved(i)))
+    && (kindFilter === "all" || i.kind === kindFilter) && (!q || i.name.toLowerCase().includes(q)))
+    .sort((a, b) => ((a.date - b.date) || idCmp(a, b)) * dir);
+}
+
+// Thumbnails load a few at a time: saved files from the phone's own thumbnails, others from the camera's (cached).
+const thumbQueue = [];
+let thumbActive = 0;
+const ltMap = new Map();
+let ltPending = [], ltTimer = 0;
+function localThumb(uri) {   // batched into one native call
+  if (!ltMap.has(uri)) ltMap.set(uri, new Promise((res) => { ltPending.push({ uri, res }); clearTimeout(ltTimer); ltTimer = setTimeout(flushLt, 30); }));
+  return ltMap.get(uri);
+}
+async function flushLt() {
+  const batch = ltPending; ltPending = [];
+  try { const r = await Native.thumbs({ uris: batch.map((b) => b.uri), size: 256 }); batch.forEach((b) => b.res(r.thumbs[b.uri] ? cfs(r.thumbs[b.uri]) : null)); }
+  catch { batch.forEach((b) => b.res(null)); }
+}
+function setImg(img, src, local) {
+  return new Promise((res) => {
+    img.onload = () => { img.classList.add("loaded"); img.dataset.loaded = 1; res(true); };
+    img.onerror = () => res(false);
+    img.classList.toggle("local", local);
+    img.src = src;
+  });
+}
+async function loadThumb(img) {
+  const it = byId.get(img.parentElement.dataset.id);
+  let ok = false;
+  if (it && it.uri) {
+    const p = await localThumb(it.uri);
+    if (p) ok = await setImg(img, p, true);
+    if (!ok && it.kind === "photo") ok = await setImg(img, cfs(it.uri), true);
+  }
+  if (!ok && it && it.thumb) {
+    try {
+      const r = await Native.camThumb({ url: it.thumb, id: it.id, cacheOnly: !cam.online });
+      if (r.date) setDate(it.id, r.date);
+      ok = await setImg(img, cfs(r.path), false);
+    } catch { if (!cam.online) img.dataset.miss = "off"; }
+  }
+  if (!ok) delete img.dataset.queued;
+}
+function pumpThumbs() {
+  while (!browsing && !sync.running && lbIndex < 0 && !remote.open && thumbActive < 3 && thumbQueue.length) {
+    const img = thumbQueue.shift();
+    if (img.dataset.loaded || !img.isConnected) { delete img.dataset.queued; continue; }
+    thumbActive++;
+    loadThumb(img).finally(() => { thumbActive--; pumpThumbs(); });
+  }
+}
+const observer = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    const img = e.target, d = img.dataset;
+    if (e.isIntersecting && !d.loaded && !d.queued && !(d.miss && !cam.online) && (+d.tries || 0) < 3) {
+      d.queued = 1; d.tries = (+d.tries || 0) + 1; thumbQueue.push(img);
+    }
+  }
+  pumpThumbs();
+}, { rootMargin: "300px" });
+
+function tileFor(it) {
+  const el = document.createElement("button");
+  el.className = "tile"; el.dataset.id = it.id;
+  el.innerHTML = `<img alt=""><span class="vid"></span><span class="badge"></span><span class="check">${ICON_OK}</span>`;
+  observer.observe(el.querySelector("img"));
+  return el;
+}
+function updateTile(it, el = $("days").querySelector(`[data-id="${CSS.escape(it.id)}"]`)) {
+  if (!el) return;
+  const b = el.querySelector(".badge"), ok = isSaved(it), v = el.querySelector(".vid");
+  b.className = "badge" + (ok ? " ok" : ""); b.innerHTML = ok ? ICON_OK : ICON_CAM;
+  v.hidden = it.kind !== "video"; v.textContent = it.kind === "video" ? "▶ " + (it.dur ? fmtDur(it.dur) : "video") : "";
+  el.classList.toggle("sel", sel.has(it.id));
+  el.setAttribute("aria-label", [it.name, it.kind, it.dateKnown && it.date ? fmtDate(it.date) : "", ok ? "saved" : "on camera"].filter(Boolean).join(", "));
+  if (selecting) el.setAttribute("aria-pressed", sel.has(it.id)); else el.removeAttribute("aria-pressed");
+}
+function emptyText() {
+  if (!items.length) return cam.online ? "Reading the camera…" : "Connect the camera to see its photos.";
+  const noun = kindFilter === "photo" ? "photos" : kindFilter === "video" ? "videos" : "files";
+  if (query.trim()) return `No ${noun} match "${query.trim()}".`;
+  if (filter === "new") return cam.online ? `No new ${noun} on the camera.` : `No new ${noun} to show while the camera is offline.`;
+  if (filter === "local") return `No ${noun} saved on this phone yet.`;
+  return `No ${noun} to show.`;
+}
+const tiles = new Map();
+let renderLater = false;
+function render() {
+  if (drag) { renderLater = true; return; }   // replacing the tiles under a finger would cancel the touch
+  mergeItems();
+  const list = visible(), host = $("days");
+  $("count").textContent = plural(list.length, "item");
+  $("empty").hidden = list.length > 0;
+  $("empty").textContent = emptyText();
+  const frag = document.createDocumentFragment();
+  let key = null, grid = null;
+  visIds = list.map((i) => i.id); visIdx = new Map(visIds.map((id, n) => [id, n]));
+  groups = []; dayBtns = [];
+  for (const it of list) {
+    const k = dayKey(it.date);
+    if (k !== key) {
+      key = k;
+      const sec = document.createElement("section"); sec.className = "day-group";
+      const h = document.createElement("h3"); h.className = "day";
+      const label = dayLabel(it.date);
+      const cb = document.createElement("button"); cb.className = "daycheck"; cb.dataset.g = groups.length; cb.innerHTML = ICON_OK;
+      cb.setAttribute("aria-label", `Select all from ${label}`); cb.setAttribute("aria-pressed", "false");
+      const sp = document.createElement("span"); sp.textContent = label;
+      h.append(cb, sp);
+      groups.push({ ids: [], month: it.date ? `${MON[new Date(it.date).getMonth()]} ${new Date(it.date).getFullYear()}` : "Date unknown" }); dayBtns.push(cb);
+      grid = document.createElement("div"); grid.className = "grid";
+      sec.append(h, grid); frag.appendChild(sec);
+    }
+    groups[groups.length - 1].ids.push(it.id);
+    const ts = it.uri ? "L" : "C";
+    let el = tiles.get(it.id);
+    if (el && el.dataset.ts !== ts) { observer.unobserve(el.querySelector("img")); el = null; }
+    if (!el) { el = tileFor(it); el.dataset.ts = ts; tiles.set(it.id, el); }
+    updateTile(it, el);
+    grid.appendChild(el);
+  }
+  host.replaceChildren(frag);
+  // Re-observe so tiles that were already on screen (and failed while offline) load now.
+  host.querySelectorAll("img").forEach((img) => {
+    if (img.dataset.miss && cam.online) { delete img.dataset.miss; img.dataset.tries = 0; }
+    observer.unobserve(img); observer.observe(img);
+  });
+  if (lbIndex >= 0) { const i = list.findIndex((x) => x.id === lbId); if (i >= 0) lbIndex = i; }
+  renderStatus(); updateSel(); measureFast();
+}
+let visIds = [], visIdx = new Map(), groups = [], dayBtns = [];
+$("days").addEventListener("click", (e) => {
+  const cb = e.target.closest(".daycheck");
+  if (cb) return toggleDay(+cb.dataset.g);
+  if (suppressClick) { suppressClick = false; return; }   // the release that ended a long press / drag-select
+  const el = e.target.closest(".tile"); if (!el) return;
+  const id = el.dataset.id;
+  if (selecting) { sel.has(id) ? sel.delete(id) : sel.add(id); updateTile(byId.get(id), el); updateSel(); }
+  else openLb(visible().findIndex((i) => i.id === id));
+});
+$("filter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  filter = b.dataset.f;
+  [...$("filter").children].forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+  render();
+});
+$("kindFilter").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  kindFilter = b.dataset.k;
+  [...$("kindFilter").children].forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+  render();
+});
+function setSort(d) {
+  sortDir = d; store.set("sort", d);
+  $("sortBtn").textContent = d === "desc" ? "Newest first" : "Oldest first";
+  [...$("sortMenu").children].forEach((x) => x.classList.toggle("on", x.dataset.s === d));
+}
+setSort(sortDir);
+function showSortMenu(on) {
+  const m = $("sortMenu"), r = $("sortBtn").getBoundingClientRect();
+  m.hidden = !on; $("sortBtn").setAttribute("aria-expanded", on);
+  if (on) m.style.top = (r.bottom + window.scrollY + 4) + "px";
+}
+$("sortBtn").onclick = (e) => { e.stopPropagation(); showSortMenu($("sortMenu").hidden); };
+$("sortMenu").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; setSort(b.dataset.s); showSortMenu(false); render(); });
+document.addEventListener("click", () => { if (!$("sortMenu").hidden) showSortMenu(false); });
+$("searchBtn").onclick = () => {
+  const on = $("searchBar").hidden;
+  $("searchBar").hidden = !on; $("searchBtn").setAttribute("aria-expanded", on);
+  if (on) $("searchIn").focus(); else { $("searchIn").value = ""; query = ""; render(); }
+};
+$("searchIn").addEventListener("input", () => { query = $("searchIn").value; render(); });
+const setHdr = () => document.documentElement.style.setProperty("--hdr", document.querySelector("header").offsetHeight + "px");
+window.addEventListener("resize", setHdr);
+
+// ---- selection
+function refreshTiles() { for (const it of items) { const el = tiles.get(it.id); if (el && el.isConnected) updateTile(it, el); } }
+function setSelecting(on) {
+  selecting = on; sel.clear();
+  document.body.classList.toggle("selecting", on);
+  $("selectBtn").textContent = on ? "Done" : "Select";
+  refreshTiles(); updateSel();
+}
+function updateSel() {
+  const chosen = items.filter((i) => sel.has(i.id));
+  const saveable = chosen.filter((i) => !isSaved(i)).length, shareable = chosen.filter((i) => i.uri).length;
+  const allSel = visIds.length > 0 && visIds.every((id) => sel.has(id));
+  $("selN").textContent = `${sel.size} selected`;
+  $("selbar").classList.toggle("show", selecting);
+  $("selAll").textContent = allSel ? "Clear" : `Select all ${visIds.length}`;
+  $("selSave").textContent = saveable ? `Save ${saveable}` : "Save";
+  $("selShare").textContent = shareable ? `Share ${shareable}` : "Share";
+  $("selSave").disabled = !saveable || !cam.online;
+  $("selShare").disabled = !sel.size;
+  groups.forEach((gr, n) => {
+    const on = gr.ids.length > 0 && gr.ids.every((id) => sel.has(id));
+    dayBtns[n].classList.toggle("on", on); dayBtns[n].setAttribute("aria-pressed", on);
+  });
+}
+function toggleDay(n) {
+  const ids = groups[n]?.ids || [], all = ids.every((id) => sel.has(id));
+  ids.forEach((id) => all ? sel.delete(id) : sel.add(id));
+  ids.forEach((id) => { const it = byId.get(id), el = tiles.get(id); if (it && el) updateTile(it, el); });
+  updateSel();
+}
+$("selectBtn").onclick = () => setSelecting(!selecting);
+// "Select all N" covers everything matching the current filters, not just what has loaded on screen.
+$("selAll").onclick = () => {
+  const all = visIds.length > 0 && visIds.every((id) => sel.has(id));
+  visIds.forEach((id) => all ? sel.delete(id) : sel.add(id));
+  refreshTiles(); updateSel();
+  if (!all) toast(`Selected all ${visIds.length}`);
+};
+
+// Long press (450 ms) starts selecting; keep the finger down and drag to select the range from that tile to the one under
+// the finger, scrolling when near the top or bottom edge. Pointer events do the press; touchmove only stops the page scrolling.
+const LONG_PRESS_MS = 450;
+let lp = null, drag = null, suppressClick = false;
+function tileIdxAt(x, y) {
+  const el = document.elementFromPoint(x, y)?.closest?.(".tile");
+  return el ? visIdx.get(el.dataset.id) : undefined;
+}
+function cancelLp() { if (lp) { clearTimeout(lp.timer); lp = null; } }
+function applyRange(cur) {
+  const d = drag, lo = Math.min(d.anchor, cur), hi = Math.max(d.anchor, cur);
+  const plo = Math.min(d.anchor, d.last), phi = Math.max(d.anchor, d.last);
+  d.last = cur;
+  for (let i = Math.min(lo, plo); i <= Math.max(hi, phi); i++) {
+    const id = visIds[i], inR = i >= lo && i <= hi;
+    const want = d.mode === "add" ? (d.base.has(id) || inR) : (d.base.has(id) && !inR);
+    if (sel.has(id) === want) continue;
+    want ? sel.add(id) : sel.delete(id);
+    const it = byId.get(id), el = tiles.get(id); if (it && el) updateTile(it, el);
+  }
+  updateSel();
+}
+function startDrag() {
+  const l = lp; lp = null; if (!l) return;
+  const anchor = visIdx.get(l.id); if (anchor === undefined) return;
+  const was = selecting && sel.has(l.id);
+  if (!selecting) setSelecting(true);
+  drag = { anchor, last: anchor, mode: was ? "remove" : "add", base: new Set(sel), x: l.x, y: l.y, dirty: false, raf: 0 };
+  suppressClick = true;
+  try { navigator.vibrate?.(10); } catch {}
+  applyRange(anchor);
+  dragTick();
+}
+function dragTick() {
+  const d = drag; if (!d) return;
+  const top = document.querySelector("header").offsetHeight + 56, bot = innerHeight - 130;
+  const v = d.y < top ? -Math.min(1, (top - d.y) / 56) : d.y > bot ? Math.min(1, (d.y - bot) / 130) : 0;
+  if (v) { window.scrollBy(0, Math.round(v * 22)); d.dirty = true; }   // up to ~1300 px/s
+  // The bar and header cover the edge zones, so hit-test just inside them while the finger is out there.
+  if (d.dirty) { d.dirty = false; const i = tileIdxAt(d.x, Math.min(Math.max(d.y, top), bot)); if (i !== undefined && i !== d.last) applyRange(i); }
+  d.raf = requestAnimationFrame(dragTick);
+}
+function endDrag() {
+  if (!drag) return;
+  cancelAnimationFrame(drag.raf); drag = null;
+  if (renderLater) { renderLater = false; render(); }
+}
+$("days").addEventListener("pointerdown", (e) => {
+  suppressClick = false;
+  if (drag || (e.pointerType === "mouse" && e.button !== 0)) return;
+  const el = e.target.closest?.(".tile");
+  cancelLp();
+  if (!el || !e.isPrimary) return;
+  lp = { id: el.dataset.id, x: e.clientX, y: e.clientY, timer: setTimeout(startDrag, LONG_PRESS_MS) };
+});
+$("days").addEventListener("pointermove", (e) => {
+  if (lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 10) cancelLp();   // it is a scroll, not a press
+  if (drag && e.isPrimary) { drag.x = e.clientX; drag.y = e.clientY; drag.dirty = true; }
+});
+for (const t of ["pointerup", "pointercancel"]) $("days").addEventListener(t, () => { cancelLp(); endDrag(); });
+$("days").addEventListener("contextmenu", (e) => e.preventDefault());
+
+// Pull to refresh: at the top of the grid, drag down past the threshold and let go. Not while selecting or in the viewer.
+let pull = null, refreshing = false;
+const ptrEl = $("ptr"), PTR_AT = 64;
+function ptrShow(y, ready) {
+  ptrEl.classList.remove("anim"); ptrEl.classList.toggle("ready", ready);
+  ptrEl.style.transform = `translateY(${y - 48}px)`; ptrEl.style.opacity = Math.min(1, y / 40);
+}
+function ptrHide() { ptrEl.classList.add("anim"); ptrEl.classList.remove("ready", "busy"); ptrEl.style.transform = ""; ptrEl.style.opacity = ""; }
+document.addEventListener("touchstart", (e) => {
+  const blocked = selecting || lbIndex >= 0 || drag || refreshing || document.querySelector("dialog[open]") || e.touches.length !== 1
+    || window.scrollY > 0 || e.target.closest?.("#fast, #sortMenu, input");
+  pull = blocked ? null : { y0: e.touches[0].clientY, x0: e.touches[0].clientX, active: false, d: 0 };
+}, { passive: true });
+document.addEventListener("touchmove", (e) => {
+  if (drag) { if (e.cancelable) e.preventDefault(); return; }   // drag-select must not scroll the page
+  if (!pull) return;
+  const dy = e.touches[0].clientY - pull.y0, dx = e.touches[0].clientX - pull.x0;
+  if (window.scrollY > 0 || e.touches.length !== 1) { pull = null; return; }
+  if (!pull.active) {
+    if (dy < -8) { pull = null; return; }
+    if (dy < 12 || dy < Math.abs(dx) * 1.5) return;
+    pull.active = true; cancelLp();
+  }
+  if (e.cancelable) e.preventDefault();
+  pull.d = Math.min(96, (dy - 12) * 0.5);
+  ptrShow(pull.d, pull.d >= PTR_AT);
+}, { passive: false });
+async function endPull(e) {
+  const p = pull; pull = null;
+  if (!p || !p.active) return;
+  if (p.d >= PTR_AT && e.type === "touchend" && !refreshing) {
+    refreshing = true; ptrEl.classList.add("anim", "busy"); ptrEl.style.transform = "translateY(8px)"; ptrEl.style.opacity = 1;
+    try { await $("refreshBtn").onclick(); } finally { refreshing = false; ptrHide(); }
+  } else ptrHide();
+}
+document.addEventListener("touchend", endPull);
+document.addEventListener("touchcancel", endPull);
+
+// Fast scroll: a draggable thumb on the right edge while scrolling; the bubble shows the month and year under it.
+// Positions are measured once per render (not per scroll event) so scrolling stays cheap.
+const fastEl = $("fast"), fastThumb = $("fastThumb"), fastBubble = $("fastBubble");
+let fm = { offs: [], max: 0, top: 0, track: 1 }, fastHide = 0, fastDrag = false, fastRaf = 0, fastMeasure = 0;
+const THUMB_H = 56;
+function measureFast() {
+  cancelAnimationFrame(fastMeasure);
+  fastMeasure = requestAnimationFrame(() => {
+    const y = window.scrollY;
+    fm.offs = [...$("days").children].map((s) => s.getBoundingClientRect().top + y);
+    fm.max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    fm.top = document.querySelector("header").offsetHeight + 4;
+    fm.track = Math.max(1, innerHeight - fm.top - 110 - THUMB_H);
+    updateFast();
+  });
+}
+function monthAt(y) {
+  let lo = 0, hi = fm.offs.length - 1, r = 0;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (fm.offs[m] <= y) { r = m; lo = m + 1; } else hi = m - 1; }
+  return groups[r]?.month || "";
+}
+function updateFast() {
+  fastRaf = 0;
+  if (fm.max < innerHeight * 1.5) { fastEl.classList.remove("show", "drag"); return; }   // short lists don't need it
+  const ty = fm.top + Math.min(1, window.scrollY / fm.max) * fm.track;
+  fastThumb.style.transform = `translateY(${ty}px)`;
+  fastBubble.style.transform = `translateY(${ty + 10}px)`;
+  if (fastDrag) fastBubble.textContent = monthAt(window.scrollY + fm.top + 40);
+}
+function showFast() {
+  if (fm.max < innerHeight * 1.5) return;
+  fastEl.classList.add("show");
+  clearTimeout(fastHide);
+  if (!fastDrag) fastHide = setTimeout(() => fastEl.classList.remove("show"), 2000);
+}
+window.addEventListener("scroll", () => { showFast(); if (!fastRaf) fastRaf = requestAnimationFrame(updateFast); }, { passive: true });
+window.addEventListener("resize", measureFast);
+function fastTo(clientY) {
+  const r = Math.min(1, Math.max(0, (clientY - fm.top - THUMB_H / 2) / fm.track));
+  window.scrollTo(0, r * fm.max);
+}
+fastThumb.addEventListener("pointerdown", (e) => {
+  fastDrag = true; fastEl.classList.add("drag"); clearTimeout(fastHide);
+  fastThumb.setPointerCapture(e.pointerId); e.preventDefault(); fastTo(e.clientY);
+});
+fastThumb.addEventListener("pointermove", (e) => { if (fastDrag) fastTo(e.clientY); });
+const fastEnd = () => { if (!fastDrag) return; fastDrag = false; fastEl.classList.remove("drag"); showFast(); };
+fastThumb.addEventListener("pointerup", fastEnd); fastThumb.addEventListener("pointercancel", fastEnd);
+
+$("selSave").onclick = () => { const list = items.filter((i) => sel.has(i.id)); setSelecting(false); saveItems(list); };
+$("syncBtn").onclick = () => saveItems(catalog);
+$("cancelBtn").onclick = () => { Native.cancelSave().catch(() => {}); toast("Stopping…"); };
+$("refreshBtn").onclick = async () => {
+  if (!cam.online) { toast("Looking for the camera…"); await connect({ force: true }); renderStatus(); return toast(cam.online ? "Connected" : "Camera not found"); }
+  toast("Reading the camera…"); await Promise.all([refreshCatalog(), refreshSaved()]); toast(plural(catalog.length, "file") + " on the camera");
+};
+
+// ---- viewer
+const fullIds = new Set();   // camera photos whose full-size original was loaded this session
+const exifCache = new Map();
+let zoom = { s: 1, x: 0, y: 0 };
+const ZOOM_MAX = 6, ZOOM_DOUBLE = 2.5;
+// Camera priority: listing > viewer > save > grid thumbnails > dates. While the viewer is open the grid's thumbnail
+// and date traffic waits (requests already in flight finish), so the preview, Full size and exifRemote aren't stuck behind it.
+function openLb(i) { lbIndex = i; $("lb").classList.add("show"); Native.stopDates().catch(() => {}); showLb(); }
+function closeLb() { $("lb").classList.remove("show"); $("lbStage").replaceChildren(); showInfo(false); lbIndex = -1; ptrs.clear(); g = null; pumpThumbs(); startDates(); }
+function lbImg() { return $("lbStage").querySelector("img"); }
+function applyZoom(snap) {
+  const m = lbImg(); if (!m) return;
+  m.classList.toggle("snap", !!snap);
+  m.style.transform = zoom.s === 1 && !zoom.x && !zoom.y ? "" : `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+}
+function clampZoom() {
+  const m = lbImg(), st = $("lbStage"); if (!m) return;
+  zoom.s = Math.min(ZOOM_MAX, Math.max(1, zoom.s));
+  const mx = Math.max(0, (m.offsetWidth * zoom.s - st.clientWidth) / 2), my = Math.max(0, (m.offsetHeight * zoom.s - st.clientHeight) / 2);
+  zoom.x = Math.min(mx, Math.max(-mx, zoom.x)); zoom.y = Math.min(my, Math.max(-my, zoom.y));
+  if (zoom.s === 1) zoom.x = zoom.y = 0;
+}
+function resetZoom() { zoom = { s: 1, x: 0, y: 0 }; applyZoom(false); }
+// Zoom to scale s keeping the stage point (px, py), measured from the stage centre, where it is.
+function zoomAt(s, px, py) {
+  const k = Math.min(ZOOM_MAX, Math.max(1, s)) / zoom.s;
+  zoom.x = px - (px - zoom.x) * k; zoom.y = py - (py - zoom.y) * k; zoom.s *= k;
+  clampZoom();
+}
+function showLb() {
+  const list = visible(), it = list[lbIndex]; if (!it) return closeLb();
+  lbId = it.id;
+  zoom = { s: 1, x: 0, y: 0 };
+  let m;
+  if (it.kind === "video") {
+    m = document.createElement("video"); m.controls = true; m.playsInline = true; m.preload = "none";
+    if (it.uri) m.src = cfs(it.uri); else { m.src = it.orig; m.poster = it.preview; }
+  } else {
+    m = document.createElement("img"); m.alt = it.name; m.draggable = false;
+    if (it.uri) m.src = cfs(it.uri);                         // saved: the original, from the phone
+    else if (fullIds.has(it.id) && cam.online) m.src = it.orig;
+    else {
+      m.src = it.preview;   // not saved: camera preview, or the cached thumbnail when the camera is away
+      m.onerror = () => { m.onerror = null; Native.camThumb({ url: it.thumb, id: it.id, cacheOnly: true }).then((r) => { m.src = cfs(r.path); }).catch(() => {}); };
+    }
+  }
+  $("lbStage").replaceChildren(m);
+  const nm = $("lbName"); nm.textContent = it.name;
+  const add = (t) => { const sm = document.createElement("small"); sm.textContent = t; nm.appendChild(sm); };
+  if (it.dateKnown && it.date) add(fmtDateTime(it.date));
+  add(`${fmtBytes(it.size)} · ${isSaved(it) ? "on your phone" : "on the camera"} · ${lbIndex + 1} of ${list.length}`);
+  updateLbSave(it);
+  $("lbShare").hidden = $("lbOpen").hidden = !it.uri;
+  setFullBtn(it, false);
+  if (!$("lbInfo").hidden) fillInfo(it);
+  [list[lbIndex - 1], list[lbIndex + 1]].forEach((n) => { if (n && !n.uri && cam.online && n.kind === "photo") new Image().src = n.preview; });
+}
+function updateLbSave(it = lbIndex >= 0 ? visible()[lbIndex] : null) {
+  if (!it) return;
+  $("lbSave").disabled = isSaved(it) || sync.running || !cam.online;
+  $("lbSave").textContent = isSaved(it) ? "Saved" : "Save to phone";
+  $("lbSave").hidden = isSaved(it);
+}
+const step = (d) => { const n = lbIndex + d; if (n >= 0 && n < visible().length) { lbIndex = n; showLb(); } };
+$("lbClose").onclick = closeLb;
+$("lbSave").onclick = async () => { const it = visible()[lbIndex]; await saveItems([it]); updateLbSave(); };
+
+// Full size for camera-only photos: the preview is shown first; the ~5 MB original loads on request.
+function setFullBtn(it, loading) {
+  const b = $("lbFull");
+  b.hidden = !(it.kind === "photo" && !it.uri && it.orig && cam.online && !fullIds.has(it.id));
+  b.disabled = loading;
+  b.replaceChildren();
+  if (loading) { const sp = document.createElement("span"); sp.className = "spin"; b.append(sp, "Loading full size…"); }
+  else b.textContent = `Full size · ${fmtBytes(it.size)}`;
+}
+$("lbFull").onclick = () => {
+  const it = visible()[lbIndex], m = lbImg(); if (!it || !m || !it.orig) return;
+  setFullBtn(it, true);
+  const big = new Image();
+  big.onload = () => {
+    fullIds.add(it.id);
+    if (lbId !== it.id) return;
+    m.onerror = null; m.src = it.orig; resetZoom(); setFullBtn(it, false);
+  };
+  big.onerror = () => { if (lbId === it.id) { setFullBtn(it, false); toast("Couldn't load the full size"); } };
+  big.src = it.orig;
+};
+
+// Gestures on the stage: pinch to zoom, drag to pan when zoomed, double-tap 1x/2.5x, swipe to change photo at 1x.
+const ptrs = new Map();
+let g = null, lastTap = null;
+const stagePt = (e) => { const r = $("lbStage").getBoundingClientRect(); return { x: e.clientX - r.left - r.width / 2, y: e.clientY - r.top - r.height / 2, w: r.width, h: r.height }; };
+$("lbStage").addEventListener("pointerdown", (e) => {
+  const st = stagePt(e), vid = $("lbStage").querySelector("video");
+  if (vid && st.y > st.h / 2 - 90) return;                  // leave the video's controls alone
+  try { $("lbStage").setPointerCapture(e.pointerId); } catch {}
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 1) g = { x0: e.clientX, y0: e.clientY, t0: Date.now(), moved: false, pinched: false };
+  else if (ptrs.size === 2 && g) {
+    const [a, b] = [...ptrs.values()];
+    Object.assign(g, { pinched: true, dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: zoom.s });
+  }
+});
+$("lbStage").addEventListener("pointermove", (e) => {
+  const p = ptrs.get(e.pointerId); if (!p || !g) return;
+  const px = p.x, py = p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (Math.hypot(e.clientX - g.x0, e.clientY - g.y0) > 8) g.moved = true;
+  if (ptrs.size >= 2 && lbImg()) {
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    const r = $("lbStage").getBoundingClientRect();
+    zoomAt(g.s0 * d / g.dist, (a.x + b.x) / 2 - r.left - r.width / 2, (a.y + b.y) / 2 - r.top - r.height / 2);
+    // the midpoint moves by half of this pointer's movement
+    zoom.x += (e.clientX - px) / 2; zoom.y += (e.clientY - py) / 2;
+    clampZoom(); applyZoom(false);
+  } else if (zoom.s > 1 && lbImg()) {
+    zoom.x += e.clientX - px; zoom.y += e.clientY - py;
+    clampZoom(); applyZoom(false);
+  }
+});
+function endPtr(e, cancelled) {
+  if (!ptrs.delete(e.pointerId) || !g) return;
+  if (ptrs.size > 0) { g.moved = true; g.pinched = true; return; }
+  const dx = e.clientX - g.x0, dy = e.clientY - g.y0, wasPinch = g.pinched, moved = g.moved, quick = Date.now() - g.t0 < 350;
+  g = null;
+  if (cancelled) return;
+  if (zoom.s < 1.05) { zoom = { s: 1, x: 0, y: 0 }; applyZoom(true); }
+  if (wasPinch) return;
+  if (!moved && quick) {                                    // a tap; two close together make a double-tap
+    const now = Date.now(), st = stagePt(e);
+    if (lastTap && now - lastTap.t < 400 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+      lastTap = null;
+      if (lbImg()) { if (zoom.s > 1) zoom = { s: 1, x: 0, y: 0 }; else zoomAt(ZOOM_DOUBLE, st.x, st.y); applyZoom(true); }
+    } else lastTap = { t: now, x: e.clientX, y: e.clientY };
+    return;
+  }
+  if (zoom.s === 1 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.2) step(dx < 0 ? 1 : -1);
+}
+$("lbStage").addEventListener("pointerup", (e) => endPtr(e, false));
+$("lbStage").addEventListener("pointercancel", (e) => endPtr(e, true));
+
+// Details: name, date, size, dimensions, then EXIF (saved: read locally; camera: only the header is streamed).
+const fmtShutter = (t) => t >= 1 ? `${+t.toFixed(1)} s` : `1/${Math.round(1 / t)} s`;
+const exifTaken = (t) => { const m = /^(\d+):(\d+):(\d+) (\d+):(\d+)/.exec(t || ""); return m ? fmtDateTime(new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime()) : ""; };
+const fmtNum = (n, d = 1) => String(+n.toFixed(d));
+function showInfo(on) {
+  $("lbInfo").hidden = !on; $("lbInfoBtn").setAttribute("aria-expanded", on);
+  if (on) { const it = visible()[lbIndex]; if (it) fillInfo(it); }
+}
+$("lbInfoBtn").onclick = () => showInfo($("lbInfo").hidden);
+$("lbInfoClose").onclick = () => showInfo(false);
+async function fillInfo(it) {
+  const dl = $("lbInfoList"), note = $("lbInfoNote");
+  const rows = (x) => {
+    dl.replaceChildren();
+    for (const [k, v] of x) { if (v == null || v === "") continue; const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  };
+  const base = [["Name", it.name], ["Taken", it.dateKnown && it.date ? fmtDateTime(it.date) : ""], ["Size", fmtBytes(it.size)],
+    ["Dimensions", it.w && it.h ? `${it.w} × ${it.h}` : ""], ["Length", it.kind === "video" && it.dur ? fmtDur(it.dur) : ""],
+    ["Where", isSaved(it) ? "On your phone" : "On the camera"]];
+  rows(base); note.hidden = true;
+  if (it.kind !== "photo") return;
+  let ex = exifCache.get(it.id);
+  if (!ex) {
+    if (!it.uri && !cam.online) { note.hidden = false; note.textContent = "Camera details aren't available while the camera is off."; return; }
+    note.hidden = false; note.textContent = "Reading details…";
+    try { ex = it.uri ? await Native.exif({ uri: it.uri }) : await Native.exifRemote({ url: it.orig }); exifCache.set(it.id, ex); }
+    catch { if (lbId === it.id) note.textContent = "Couldn't read the camera details."; return; }
+  }
+  if (lbId !== it.id || $("lbInfo").hidden) return;
+  note.hidden = true;
+  const focal = ex.focal ? `${fmtNum(ex.focal)} mm${ex.focal35 ? ` (${ex.focal35} mm equiv.)` : ""}` : "";
+  const dims = ex.width ? `${ex.width} × ${ex.height}` : "";
+  const taken = exifTaken(ex.taken);
+  const out = base.map((r) => r[0] === "Dimensions" && dims ? ["Dimensions", dims] : r[0] === "Taken" && taken ? ["Taken", taken] : r);
+  const i = out.findIndex((r) => r[0] === "Where");
+  out.splice(i, 0, ["Camera", ex.model], ["Lens", ex.lens], ["Focal length", focal], ["Aperture", ex.aperture ? `f/${fmtNum(ex.aperture)}` : ""],
+    ["Shutter", ex.shutter ? fmtShutter(ex.shutter) : ""], ["ISO", ex.iso ? String(ex.iso) : ""],
+    ["Exposure comp.", ex.expComp != null ? `${ex.expComp > 0 ? "+" : ""}${fmtNum(ex.expComp)} EV` : ""],
+    ["Flash", ex.flash == null ? "" : ex.flash ? "Fired" : "Didn't fire"],
+    ["Location", ex.lat != null ? `${ex.lat.toFixed(5)}, ${ex.lon.toFixed(5)}` : ""]);
+  rows(out);
+}
+
+// Share and open in another app (saved files only).
+$("lbShare").onclick = () => { const it = visible()[lbIndex]; if (it?.uri) Native.share({ uris: [it.uri] }).catch(() => toast("Couldn't share")); };
+$("lbOpen").onclick = () => {
+  const it = visible()[lbIndex];
+  if (it?.uri) Native.openExternal({ uri: it.uri, mime: it.kind === "video" ? "video/mp4" : "image/jpeg" })
+    .catch((e) => toast(String(e.message || e).includes("No app") ? "No app can open this" : "Couldn't open it"));
+};
+$("selShare").onclick = () => {
+  const chosen = items.filter((i) => sel.has(i.id)), ready = chosen.filter((i) => i.uri);
+  if (!ready.length) return toast(chosen.length ? "Save them to your phone first" : "Nothing selected");
+  if (ready.length < chosen.length) toast(`Sharing ${ready.length} saved; ${chosen.length - ready.length} not saved yet`);
+  Native.share({ uris: ready.map((i) => i.uri) }).catch(() => toast("Couldn't share"));
+};
+
+// Android Back (sent by the native side): close the topmost thing, else send the app to the background.
+function handleBack() {
+  if ($("spaceDlg").open) $("spaceDlg").close();
+  else if ($("failDlg").open) $("failDlg").close();
+  else if (remote.open) closeRemote();
+  else if (!$("lbInfo").hidden) showInfo(false);
+  else if (lbIndex >= 0) closeLb();
+  else if ($("settings").open) $("settings").close("cancel");
+  else if (!$("sortMenu").hidden) showSortMenu(false);
+  else if (!$("searchBar").hidden) $("searchBtn").click();
+  else if (selecting) setSelecting(false);
+  else Native.exitApp().catch(() => {});
+}
+Native?.addListener("back", handleBack);
+
+// ---- settings (a full-screen sheet; every control applies as soon as it changes)
+let aboutInfo = null, nightNative = null, lastCamInfo = null;
+let lastBars = "";
+function applyTheme() {
+  const pref = store.get("theme", "system");
+  const dark = pref === "dark" ? true : pref === "light" ? false : nightNative != null ? nightNative : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const color = dark ? "#111214" : "#f6f5f2";
+  $("themeMeta").content = color;
+  if (lastBars !== color) { lastBars = color; Native?.setSystemBars({ color, dark }).catch(() => {}); }   // only on a real change: it makes Android re-apply insets
+  for (const b of $("themeSeg").children) { const on = b.dataset.t === pref; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); }
+}
+async function refreshNight() { try { aboutInfo = await Native.appInfo(); nightNative = aboutInfo.night; } catch {} applyTheme(); }
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => refreshNight());
+// Follow the phone's dark mode while on "System", also when the WebView never reports it (old WebViews): ask native every few seconds.
+setInterval(() => { if (!document.hidden && store.get("theme", "system") === "system") refreshNight(); }, 3000);
+$("themeSeg").onclick = (e) => { const t = e.target.closest("button")?.dataset.t; if (t) { store.set("theme", t); applyTheme(); } };
+applyTheme();
+
+const DIR_RE = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$/;
+function fillFolder() {
+  const m = /^(DCIM|Pictures)\/(.+?)\/?$/.exec(curFolder());
+  $("dirBase").value = m ? m[1] : "DCIM"; $("dirName").value = m ? m[2] : "Lumix";
+}
+function applyFolder() {
+  const name = $("dirName").value.trim().replace(/\s+/g, " ");
+  if (!DIR_RE.test(name)) { toast("Use letters, digits, spaces, - and _"); fillFolder(); return; }
+  const f = `${$("dirBase").value}/${name}/`;
+  $("dirName").value = name;
+  if (f === curFolder()) return;
+  store.set("folder", f); store.set("folders", allFolders());
+  $("dirNote").textContent = `New saves go to ${f.replace(/\/$/, "")}. Photos saved earlier to other folders still count as saved.`;
+  refreshSaved(); renderStatus(); fillAbout(lastCamInfo);
+}
+$("dirBase").onchange = applyFolder; $("dirName").onchange = applyFolder;
+$("parIn").onchange = () => store.set("parallel", $("parIn").value === "2" ? 2 : 1);
+$("autoIn").onchange = () => store.set("autoSave", $("autoIn").checked);
+
+$("ipIn").onchange = () => {
+  const ip = $("ipIn").value.trim();
+  if (!/^[\w.-]+$/.test(ip)) { toast("Enter an address like 10.0.0.220"); $("ipIn").value = store.get("homeIp", "10.0.0.220"); return; }
+  store.set("homeIp", ip); store.set("ip", ip); cam.online = false; lastDiscover = 0; toast("Saved. Looking for the camera…");
+};
+function camStat() {
+  $("setCamStat").textContent = cam.online ? `Connected at ${cam.ip}.` : cam.searching ? "Searching for the camera…" : "Not connected.";
+}
+$("findBtn").onclick = async () => {
+  const out = $("findOut"), btn = $("findBtn");
+  btn.disabled = true; out.replaceChildren(); out.className = "notice"; out.textContent = "Searching your Wi-Fi…";
+  try {
+    const res = await Native.discover(discoverArgs(3000));
+    out.replaceChildren();
+    if (res.hotspot) { out.textContent = "You're on the camera's own Wi-Fi: its address is 192.168.54.1."; return; }
+    if (!res.cameras.length) { out.textContent = res.method === "no-wifi" ? "Wi-Fi is off." : "No camera found. Is it on its Wi-Fi waiting screen (Remote Shooting & View, Via Network) and on the same Wi-Fi as this phone?"; return; }
+    for (const c of res.cameras) {
+      const b = document.createElement("button"); b.className = "btn found";
+      b.textContent = `Use ${c.ip}${c.state === "busy" ? " (in use by another device)" : ""}`;
+      b.onclick = () => { $("ipIn").value = c.ip; $("ipIn").onchange(); out.textContent = `Using ${c.ip}.`; };
+      out.appendChild(b);
+    }
+  } catch (e) { out.textContent = "Search failed: " + String(e.message || e); }
+  finally { btn.disabled = false; }
+};
+async function fillJoin() {
+  $("joinIn").checked = store.get("joinHot", false); $("joinBox").hidden = !$("joinIn").checked;
+  try { const w = await Native.getCameraWifi(); $("ssidIn").value = w.ssid || "ZS100-"; $("pwIn").value = ""; $("pwIn").placeholder = w.hasPassword ? "Saved (type to change)" : "From the camera screen"; } catch {}
+  $("joinOut").textContent = cam.joinMsg || "";
+}
+$("joinIn").onchange = () => {
+  store.set("joinHot", $("joinIn").checked); $("joinBox").hidden = !$("joinIn").checked; joinFails = 0; lastJoin = 0;
+  if (!$("joinIn").checked) { joinedByUs = false; Native.leaveCameraWifi().catch(() => {}); }
+};
+async function saveJoin() {
+  const pw = $("pwIn").value;
+  if (pw && pw.length < 8) { $("joinOut").textContent = "The password is at least 8 characters."; return false; }
+  await Native.setCameraWifi(pw ? { ssid: $("ssidIn").value.trim(), password: pw } : { ssid: $("ssidIn").value.trim() });
+  if (pw) { $("pwIn").value = ""; $("pwIn").placeholder = "Saved (type to change)"; }
+  joinFails = 0; lastJoin = 0;
+  return true;
+}
+$("ssidIn").onchange = saveJoin; $("pwIn").onchange = saveJoin;
+$("joinNow").onclick = async () => {
+  if (!(await saveJoin())) return;
+  $("joinOut").textContent = "Asking Android to join… approve the prompt if it appears.";
+  $("joinNow").disabled = true;
+  const ok = await maybeJoinHotspot(true);
+  $("joinNow").disabled = false;
+  $("joinOut").textContent = ok ? "Joined the camera's Wi-Fi." : cam.joinMsg || (cam.online ? "Connected." : "Couldn't connect.");
+};
+
+function fillAbout(cinfo) {
+  const dl = $("aboutList"); dl.replaceChildren();
+  const rows = [["Lumix app", aboutInfo ? `${aboutInfo.versionName} (${aboutInfo.versionCode})` : ""],
+    ["Phone", aboutInfo ? `${aboutInfo.device}, Android ${aboutInfo.sdk}` : ""],
+    ["Saving to", curFolder().replace(/\/$/, "")],
+    ["Camera", cinfo?.name ? `${cinfo.model || "Lumix"} (${cinfo.name})` : cam.online ? "ZS100" : "Not connected"],
+    ["Camera firmware", cinfo?.firmware || (cam.online ? "" : "")], ["Camera address", cam.online ? cam.ip : ""], ["Battery", cam.online ? cam.batt : ""]];
+  for (const [k, v] of rows) { if (!v) continue; const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+}
+async function loadAbout() {
+  await refreshNight(); fillAbout();
+  if (cam.online && !sync.running) { try { const ci = await Native.cameraInfo({ ip: cam.ip }); if (ci.name || ci.model) fillAbout(lastCamInfo = ci); } catch {} }
+}
+$("settingsBtn").onclick = () => {
+  $("ipIn").value = store.get("homeIp", "10.0.0.220");
+  $("parIn").value = String(store.get("parallel", 1)); $("autoIn").checked = store.get("autoSave", false);
+  fillFolder(); fillJoin(); camStat(); $("findOut").replaceChildren(); applyTheme(); fillLocation();
+  $("settings").showModal(); $("settings").querySelector(".sheet-body").scrollTop = 0;
+  loadAbout();
+};
+$("setBack").onclick = () => $("settings").close();
+document.addEventListener("visibilitychange", () => { if (document.hidden && remote.open) closeRemote(); if (!document.hidden) { refreshNight(); Native.bindWifi().catch(() => {}); refreshSaved(); Native.queueState().then(applyQueue).catch(() => {}); } });
+
+// ---- remote shooting: the camera goes to recmode, live view arrives by UDP (native startLiveView), commands go over HTTP
+let camChain = Promise.resolve();
+function camCmd(q, timeout = 6000) {   // one command at a time: the camera garbles overlapping requests
+  const go = () => httpGet(`http://${cam.ip}/cam.cgi?${q}`, timeout);
+  const p = camChain.then(go, go);
+  camChain = p.catch(() => {});
+  return p;
+}
+const replyOk = (b) => /<result>ok<\/result>/.test(b);
+const replyErr = (b) => (/<result>([^<]*)<\/result>/.exec(b) || [])[1] || String(b).trim().slice(0, 60);
+function remoteInfo() {
+  const bits = [];
+  if (cam.batt) bits.push(`battery ${cam.batt}`);
+  if (remote.shots) bits.push(`${remote.shots} taken`);
+  return bits.join(" · ");
+}
+let remoteTimer = 0;
+function setRemoteMode(m) {
+  remote.mode = m;
+  for (const b of $("rmMode").children) { const on = b.dataset.m === m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); b.disabled = remote.recording; }
+  const sh = $("rmShutter");
+  sh.classList.toggle("video", m === "video");
+  sh.classList.toggle("on", remote.recording);
+  sh.setAttribute("aria-label", remote.recording ? "Stop recording" : m === "video" ? "Start recording" : "Take photo");
+}
+async function openRemote() {
+  if (remote.open || remote.closing || !cam.online || sync.running) return;
+  if (browsing) { toast("Still loading the photo list. Try again in a moment."); return; }   // a listing running at the same time stalls the live view
+  Object.assign(remote, { open: true, closing: false, recording: false, shots: 0, frames: 0, busy: false });
+  setRemoteMode("photo");
+  $("remote").classList.add("show");
+  $("lvImg").hidden = true; $("rmMsg").hidden = false; $("rmMsg").textContent = "Starting live view…"; $("rmRec").hidden = true;
+  $("rmShutter").disabled = false;
+  Native.stopDates().catch(() => {});
+  renderStatus();
+  try {
+    const r = await camCmd("mode=camcmd&value=recmode", 8000);
+    if (!replyOk(r)) throw new Error(`The camera wouldn't switch to shooting (${replyErr(r)})`);
+    for (let i = 0; i < 8 && remote.open; i++) {   // the mode change takes a moment
+      const st = await camCmd("mode=getstate", 3000);
+      if (/<cammode>rec<\/cammode>/.test(st)) break;
+      await sleep(400);
+    }
+    if (!remote.open) return;
+    await Native.startLiveView({ camIp: cam.ip, port: 49199 });
+    if (!remote.open) { Native.stopLiveView().catch(() => {}); return; }
+    const mine = remote.session = (remote.session || 0) + 1;
+    setTimeout(() => {
+      if (remote.open && remote.session === mine && remote.frames === 0) {
+        $("rmMsg").hidden = false;
+        $("rmMsg").textContent = "No picture yet. The camera may be busy, or this Wi-Fi may be blocking it. You can still take photos.";
+      }
+    }, 8000);
+  } catch (e) {
+    toast(String(e.message || e).replace(/^Error: /, ""));
+    closeRemote();
+  }
+}
+async function closeRemote() {
+  if (!remote.open || remote.closing) return;
+  remote.closing = true; remote.open = false;
+  const hadShots = remote.shots > 0;
+  $("remote").classList.remove("show");
+  clearInterval(remoteTimer); $("rmRec").hidden = true;
+  zoomStops.forEach((f) => f());
+  try { await Native.stopLiveView(); } catch {}
+  try {
+    if (remote.recording) { remote.recording = false; await camCmd("mode=camcmd&value=video_recstop", 8000).catch(() => {}); }
+    await camCmd("mode=stopstream", 4000).catch(() => {});
+    for (let i = 0; i < 3; i++) {   // always leave the camera in playback mode
+      await camCmd("mode=camcmd&value=playmode", 8000).catch(() => {});
+      await sleep(700);
+      const st = await camCmd("mode=getstate", 3000).catch(() => "");
+      if (!/<cammode>rec<\/cammode>/.test(st)) break;
+    }
+  } catch {}
+  remote.closing = false;
+  renderStatus();
+  if (cam.online && hadShots) { await sleep(1000); refreshCatalog(); }
+  else { pumpThumbs(); startDates(); }
+}
+const zoomStops = [];
+function holdZoom(btn, cmd) {   // W / T: zoom while held, zoomstop on release
+  let on = false;
+  const stop = () => {
+    if (!on) return;
+    on = false; btn.classList.remove("held");
+    const go = (n) => camCmd("mode=camcmd&value=zoomstop", 4000).catch(() => { if (n > 0) go(n - 1); });   // the camera sometimes stalls a request; a lost stop would leave the lens moving
+    go(2);
+  };
+  zoomStops.push(stop);
+  btn.addEventListener("pointerdown", (e) => {
+    if (!remote.open || on) return;
+    on = true; btn.classList.add("held");
+    try { btn.setPointerCapture(e.pointerId); } catch {}
+    camCmd(`mode=camcmd&value=${cmd}`).catch(() => {});
+  });
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) btn.addEventListener(ev, stop);
+  btn.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+holdZoom($("zoomW"), "wide-normal");
+holdZoom($("zoomT"), "tele-normal");
+$("rmStage").addEventListener("click", (e) => {   // tap to focus; the camera takes 0-1000 coordinates of the picture
+  if (!remote.open || !remote.frames) return;
+  const img = $("lvImg"), r = img.getBoundingClientRect(), nw = img.naturalWidth || 4, nh = img.naturalHeight || 3;
+  const sc = Math.min(r.width / nw, r.height / nh), w = nw * sc, h = nh * sc;
+  const fx = (e.clientX - (r.left + (r.width - w) / 2)) / w, fy = (e.clientY - (r.top + (r.height - h) / 2)) / h;
+  if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;
+  const sr = $("rmStage").getBoundingClientRect(), f = $("rmFocus");
+  f.style.left = (e.clientX - sr.left) + "px"; f.style.top = (e.clientY - sr.top) + "px";
+  f.classList.remove("show"); void f.offsetWidth; f.classList.add("show");
+  camCmd(`mode=camctrl&type=touch&value=${Math.round(fx * 1000)}/${Math.round(fy * 1000)}&value2=on`).catch(() => {});
+});
+function flashScreen() { const f = $("rmFlash"); f.classList.remove("show"); void f.offsetWidth; f.classList.add("show"); }
+function recTick() { const s = Math.floor((Date.now() - remote.recStart) / 1000); $("rmRec").textContent = fmtDur(s); }
+$("rmShutter").onclick = async () => {
+  if (!remote.open || remote.busy) return;
+  remote.busy = true; $("rmShutter").disabled = true;
+  try {
+    if (remote.mode === "video") {
+      if (!remote.recording) {
+        const r = await camCmd("mode=camcmd&value=video_recstart", 8000);
+        if (!replyOk(r)) throw new Error(replyErr(r));
+        remote.recording = true; remote.recStart = Date.now();
+        $("rmRec").hidden = false; recTick(); remoteTimer = setInterval(recTick, 500);
+      } else {
+        const r = await camCmd("mode=camcmd&value=video_recstop", 8000);
+        remote.recording = false; clearInterval(remoteTimer); $("rmRec").hidden = true;
+        if (!replyOk(r)) throw new Error(replyErr(r));
+        remote.shots++; toast("Video recorded on the camera");
+      }
+      setRemoteMode("video");
+    } else {
+      const r = await camCmd("mode=camcmd&value=capture", 12000);   // focusing and exposing take a moment
+      if (!replyOk(r)) throw new Error(replyErr(r));
+      remote.shots++; flashScreen(); toast("Photo taken");
+    }
+  } catch (e) {
+    toast("Couldn't do that: " + String(e.message || e).replace(/^Error: /, ""));
+  } finally {
+    remote.busy = false; $("rmShutter").disabled = false; renderStatus();
+  }
+};
+$("rmMode").onclick = (e) => { const m = e.target.closest("button")?.dataset.m; if (m && !remote.recording) setRemoteMode(m); };
+$("rmClose").onclick = closeRemote;
+$("remoteBtn").onclick = openRemote;
+Native?.addListener("frame", (e) => {
+  if (!remote.open) return;
+  const img = $("lvImg");
+  img.src = "data:image/jpeg;base64," + e.data;
+  remote.frames++;
+  if (img.hidden) { img.hidden = false; $("rmMsg").hidden = true; }
+});
+Native?.addListener("liveview", (e) => {
+  if (!remote.open) return;
+  if (e.state === "stalled") { $("rmMsg").hidden = false; $("rmMsg").textContent = "Waiting for the picture…"; }
+  else $("rmMsg").hidden = true;
+});
+
+// ---- location: LocationService logs fixes, SaveQueue tags saved JPEGs from the log
+let locState = null, locDenied = false;
+function showLoc() {
+  const s = locState;
+  if (!s) return;
+  const on = s.enabled && s.permission;
+  $("locIn").checked = on;
+  let t = s.count ? `${plural(s.count, "location")} stored, the latest ${fmtDateTime(s.last)}.` : "Nothing recorded yet.";
+  if (on) t = (s.running ? "Recording. " : "Starting… ") + t;
+  if (locDenied) t = "Location permission was refused. Allow it for Lumix in Android's app settings, then try again. " + t;
+  $("locStat").textContent = t;
+  $("locClear").disabled = !s.count;
+}
+async function fillLocation() { try { locState = await Native.locationStatus(); } catch { return; } showLoc(); }
+$("locIn").onchange = async () => {
+  locDenied = false;
+  try { locState = await Native.setLocationRecording({ on: $("locIn").checked }); }
+  catch (e) { locDenied = String(e.message || e) === "denied"; if (!locDenied) toast(String(e.message || e)); try { locState = await Native.locationStatus(); } catch {} }
+  showLoc();
+};
+$("locClear").onclick = async () => { try { locState = await Native.clearLocationLog(); showLoc(); toast("Location log cleared"); } catch (e) { toast(String(e.message || e)); } };
+Native?.addListener("location", (s) => { locState = s; if ($("settings").open) showLoc(); });
+// If recording was on but the process was restarted, start it again (allowed while the app is in front).
+Native?.locationStatus().then((s) => { if (s.enabled && s.permission && !s.running) Native.setLocationRecording({ on: true }).catch(() => {}); }).catch(() => {});
+
+
+if (!Native) {
+  document.querySelector("main").innerHTML = '<p class="empty">This page only works inside the Lumix Android app.</p>';
+} else {
+  setHdr(); render(); refreshSaved(); refreshNight();
+  Native.queueState().then(applyQueue).catch(() => {}).finally(loop);
+}
+</script>
+</body>
+</html>

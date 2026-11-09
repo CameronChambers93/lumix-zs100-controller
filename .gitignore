@@ -1,0 +1,7 @@
+data/
+__pycache__/
+dist/
+mobile/tools/.device
+mobile/tools/out/
+mobile/tools/.device-emulator
+mobile/.bak/
