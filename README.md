@@ -23,7 +23,7 @@ Download `lumix-<version>.apk` from the [Releases](../../releases) page and inst
 Updates install over the old app only if signed with the same key.
 
 Build from source (Node 22, JDK 21, Android SDK 36): `sh mobile/build.sh` → `dist/lumix.apk`. Create your own signing key in
-`mobile/keystore/` (gitignored) first and point `signingConfigs` in `mobile/android/app/build.gradle` at it.
+`mobile/keystore/` (gitignored) first and add `mobile/keystore/keystore.properties` (see `mobile/android/app/build.gradle`).
 
 ## PC web app
 
