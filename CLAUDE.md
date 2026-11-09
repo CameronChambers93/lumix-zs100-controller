@@ -1,6 +1,6 @@
 # lumix
 
-Web app that copies photos and videos off Cameron's Panasonic Lumix ZS100 over Wi-Fi into `C:\Users\Cameron\Pictures\Lumix`
+Web app that copies photos and videos off the user's Panasonic Lumix ZS100 over Wi-Fi into `%USERPROFILE%\Pictures\Lumix`
 and lets any device on the home network browse and download them. Protocol details: `PROTOCOL.md`.
 
 - **URL:** http://10.0.0.129:8420 (the PC's LAN address; port published by the dc container `dc-lumix`).
@@ -59,7 +59,7 @@ camera's own hotspot (`192.168.54.1`) or on home Wi-Fi. Saves into the gallery (
 
 ## Testing (emulator and phone)
 
-Wireless ADB to Cameron's phone, driven by `mobile/tools/phone.sh` (run in the container: `sh mobile/tools/phone.sh`;
+Wireless ADB to the user's phone, driven by `mobile/tools/phone.sh` (run in the container: `sh mobile/tools/phone.sh`;
 checklist in `mobile/tools/TESTING.md`). The release build has WebView debugging on. Always use explicit `ip:port`
 (no mDNS through Docker NAT). Never uninstall the app (it would orphan the saved photos); `install` uses `-r`.
 
@@ -69,8 +69,8 @@ checklist in `mobile/tools/TESTING.md`). The release build has WebView debugging
 - **Common:** `status`, `install`, `launch`, `stop`, `shot` (prints a PNG path to view), `logs [n]`,
   `eval '<js>'` / `console [secs]` (Chrome DevTools Protocol via `cdp.mjs`, page globals like `cam`, `sync` work),
   `tap x y`, `text '...'`, `back`.
-- Test on the emulator by default; a few test saves there are fine (newest files, never the whole card). Ask Cameron
-  before saving to his phone or taking test shots.
+- Test on the emulator by default; a few test saves there are fine (newest files, never the whole card). Ask the user
+  before saving to their phone or taking test shots.
 
 **Emulator (default for development):** AVD `lumix_s23plus` (Galaxy S23+-like: Android 13 / API 33, 1080x2340, density 400, Google APIs + Play Store, x86_64;
 stock Google Android, not One UI). The older `lumix_pixel5` (Android 12 / API 31, 440 dpi) still exists; run only one at a time (both use adb port 5555).
