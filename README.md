@@ -11,6 +11,22 @@ talk to the camera's built-in Wi-Fi web server (protocol notes in [PROTOCOL.md](
 
 The camera serves one client at a time, so use one app at a time.
 
+## Screenshots
+
+<p align="center"><img src="docs/media/demo.gif" width="300" alt="Demo: gallery, viewer with details, selecting, and the Remote screen with live view"><br>
+<sub>Android app with a real ZS100 (33 s). <a href="docs/media/demo.mp4">MP4 version</a>.</sub></p>
+
+| | Light | Dark |
+|---|---|---|
+| **Gallery**: day groups, filters, save banner | <img src="docs/media/gallery-light.jpg" width="220"> | <img src="docs/media/gallery-dark.jpg" width="220"> |
+| **Viewer**: pinch/double-tap zoom, Full size, save | <img src="docs/media/viewer-light.jpg" width="220"> | <img src="docs/media/viewer-dark.jpg" width="220"> |
+| **Details**: EXIF read from the camera or the saved file | <img src="docs/media/details-light.jpg" width="220"> | <img src="docs/media/details-dark.jpg" width="220"> |
+| **Selection**: long-press/drag, per day, select all | <img src="docs/media/select-light.jpg" width="220"> | <img src="docs/media/select-dark.jpg" width="220"> |
+| **Background saving**: progress and Cancel in a notification | <img src="docs/media/notify-light.jpg" width="220"> | <img src="docs/media/notify-dark.jpg" width="220"> |
+| **Remote**: live view, shutter, zoom, photo/video | <img src="docs/media/remote-light.jpg" width="220"> | <img src="docs/media/remote-dark.jpg" width="220"> |
+
+Captured on the `lumix_s23plus` emulator (Android 13) against the real camera over home Wi-Fi.
+
 ## Camera setup
 
 Wi-Fi menu → Remote Shooting & View, and leave it on the waiting screen. Join your home network ("Via Network"; the camera
